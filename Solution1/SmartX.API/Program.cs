@@ -1,3 +1,4 @@
+using SmartX.API.Storage;
 
 namespace SmartX.API
 {
@@ -12,6 +13,8 @@ namespace SmartX.API
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+
+            builder.Services.AddSingleton<SensorRegistry>(); // one instance of SensorRegistry
 
             var app = builder.Build();
 

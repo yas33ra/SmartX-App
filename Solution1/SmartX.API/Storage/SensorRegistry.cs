@@ -6,7 +6,7 @@ namespace SmartX.API.Storage
 {
     public class SensorRegistry
     {
-        private readonly List<Sensor> _sensors = new(); // List
+        private readonly List<Sensor> _sensors = new(); // List (This will be changed to a dictionary in part 2)
 
     //-----------------------------------------------------------------
 
