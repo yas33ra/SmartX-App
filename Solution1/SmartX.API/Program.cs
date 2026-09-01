@@ -1,3 +1,4 @@
+using SmartX.API.Endpoints;
 using SmartX.API.Storage;
 
 namespace SmartX.API
@@ -17,6 +18,8 @@ namespace SmartX.API
             builder.Services.AddSingleton<SensorRegistry>(); // one instance of SensorRegistry
 
             var app = builder.Build();
+
+            app.MapSensorEndpoints ();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
