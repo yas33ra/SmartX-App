@@ -1,5 +1,5 @@
 ﻿//This class defines the API routes for registering sensoors, finging sensors and uploading files
-// This is done with Minimal APIs instead of Controller based APIs 
+// Using Minimal APIs instead of Controller based APIs 
 
 using SmartX.API.Models;
 using SmartX.API.Storage;
