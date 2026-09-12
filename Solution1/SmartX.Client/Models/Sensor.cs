@@ -9,6 +9,8 @@ namespace SmartX.Client.Models
     {
         public Guid Id { get; set; }  // Why You Should Use GUIDs Instead of Integers for IDs https://medium.com/@uzonweze/why-you-should-use-guids-instead-of-integers-for-ids-62addafb2aa4 
 
+        public string Name { get; set; } = string.Empty;
+
         public string MacAddress { get; set; } = string.Empty;
 
         public string Location { get; set; } = string.Empty;
@@ -17,6 +19,6 @@ namespace SmartX.Client.Models
 
         public string? AttachedFilePath { get; set; }
 
-        public DateTime RegistererAt { get; set; }
+        public DateTime RegisteredAt { get; set; }
     }
 }
