@@ -16,17 +16,19 @@ namespace SmartX.Client
         public IngestionForm()
         {
             InitializeComponent();
+            cmbCategory.DataSource = Enum.GetValues(typeof(SensorCategory));
+            Load += async (s, e) => await RefreshSensorListAsync();
         }
 
         private async void btnRegister_Click(object sender, EventArgs e)
         {
 
-            var sensor = new Sensor 
+            var sensor = new Sensor
             {
                 Name = txtName.Text,
                 MacAddress = txtMacAddress.Text,
                 Location = txtLocation.Text,
-                Category = cmbCategory.SelectedItem?.ToString() ?? string.Empty
+                Category = (SensorCategory)cmbCategory.SelectedItem
             };
 
 
@@ -62,10 +64,27 @@ namespace SmartX.Client
                 var item = new ListViewItem(sensor.Name);
                 item.SubItems.Add(sensor.MacAddress);
                 item.SubItems.Add(sensor.Location);
-                item.SubItems.Add(sensor.Category);
+                item.SubItems.Add(sensor.Category.ToString());
                 item.SubItems.Add(sensor.RegisteredAt.ToLocalTime().ToString("g"));
                 lvSensors.Items.Add(item);
             }
+        }
+
+        private void cmbCategory_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (cmbCategory.SelectedItem is not SensorCategory selected)
+            {
+                lblCategoryHint.Text = string.Empty;
+                return;
+            }
+
+            lblCategoryHint.Text = selected switch
+            {
+                SensorCategory.Climate => "Measures surroundings, e.g. temperature, humidity, moisture",
+                SensorCategory.Electrical => "Tracks electrical usage, e.g. power, voltage, battery level",
+                SensorCategory.Control => "A controllable device, e.g. valves, relays",
+                _ => string.Empty
+            };
         }
     }
 }

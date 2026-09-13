@@ -40,6 +40,7 @@
             cmbCategory = new ComboBox();
             btnAttachFile = new Button();
             lvSensors = new ListView();
+            lblCategoryHint = new Label();
             SuspendLayout();
             // 
             // label1
@@ -125,6 +126,7 @@
             cmbCategory.Name = "cmbCategory";
             cmbCategory.Size = new Size(121, 23);
             cmbCategory.TabIndex = 9;
+            cmbCategory.SelectedIndexChanged += cmbCategory_SelectedIndexChanged;
             // 
             // btnAttachFile
             // 
@@ -143,11 +145,23 @@
             lvSensors.TabIndex = 11;
             lvSensors.UseCompatibleStateImageBehavior = false;
             // 
+            // lblCategoryHint
+            // 
+            lblCategoryHint.AutoSize = true;
+            lblCategoryHint.Font = new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblCategoryHint.ForeColor = SystemColors.ActiveBorder;
+            lblCategoryHint.Location = new Point(207, 292);
+            lblCategoryHint.Name = "lblCategoryHint";
+            lblCategoryHint.Size = new Size(38, 13);
+            lblCategoryHint.TabIndex = 12;
+            lblCategoryHint.Text = "label6";
+            // 
             // IngestionForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(lblCategoryHint);
             Controls.Add(lvSensors);
             Controls.Add(btnAttachFile);
             Controls.Add(cmbCategory);
@@ -180,5 +194,6 @@
         private ComboBox cmbCategory;
         private Button btnAttachFile;
         private ListView lvSensors;
+        private Label lblCategoryHint;
     }
 }

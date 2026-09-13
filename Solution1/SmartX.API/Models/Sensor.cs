@@ -11,7 +11,7 @@ namespace SmartX.API.Models
 
         public string Location { get; set; } = string.Empty;
 
-        public string Category { get; set; } = string.Empty;
+        public SensorCategory Category { get; set; } 
 
         public string? AttachedFilePath { get; set; } 
 
