@@ -13,7 +13,9 @@ namespace SmartX.Client.Models
 
         public string MacAddress { get; set; } = string.Empty;
 
-        public string Location { get; set; } = string.Empty;
+        public string Facility { get; set; } = string.Empty;
+        public string Zone { get; set; } = string.Empty;
+        public string SubZone { get; set; } = string.Empty;
 
         public SensorCategory Category { get; set; } 
 

@@ -36,11 +36,21 @@
             label5 = new Label();
             txtMacAddress = new TextBox();
             txtName = new TextBox();
-            txtLocation = new TextBox();
             cmbCategory = new ComboBox();
             btnAttachFile = new Button();
             lvSensors = new ListView();
             lblCategoryHint = new Label();
+            txtFacility = new TextBox();
+            txtZone = new TextBox();
+            txtSubZone = new TextBox();
+            label6 = new Label();
+            label7 = new Label();
+            label8 = new Label();
+            columnHeader1 = new ColumnHeader();
+            columnHeader2 = new ColumnHeader();
+            columnHeader3 = new ColumnHeader();
+            columnHeader4 = new ColumnHeader();
+            columnHeader5 = new ColumnHeader();
             SuspendLayout();
             // 
             // label1
@@ -73,7 +83,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(39, 269);
+            label4.Location = new Point(39, 281);
             label4.Name = "label4";
             label4.Size = new Size(55, 15);
             label4.TabIndex = 3;
@@ -81,7 +91,7 @@
             // 
             // btnRegister
             // 
-            btnRegister.Location = new Point(72, 398);
+            btnRegister.Location = new Point(268, 415);
             btnRegister.Name = "btnRegister";
             btnRegister.Size = new Size(173, 23);
             btnRegister.TabIndex = 4;
@@ -112,17 +122,10 @@
             txtName.Size = new Size(100, 23);
             txtName.TabIndex = 7;
             // 
-            // txtLocation
-            // 
-            txtLocation.Location = new Point(164, 216);
-            txtLocation.Name = "txtLocation";
-            txtLocation.Size = new Size(100, 23);
-            txtLocation.TabIndex = 8;
-            // 
             // cmbCategory
             // 
             cmbCategory.FormattingEnabled = true;
-            cmbCategory.Location = new Point(164, 266);
+            cmbCategory.Location = new Point(164, 281);
             cmbCategory.Name = "cmbCategory";
             cmbCategory.Size = new Size(121, 23);
             cmbCategory.TabIndex = 9;
@@ -130,7 +133,7 @@
             // 
             // btnAttachFile
             // 
-            btnAttachFile.Location = new Point(66, 337);
+            btnAttachFile.Location = new Point(164, 353);
             btnAttachFile.Name = "btnAttachFile";
             btnAttachFile.Size = new Size(75, 23);
             btnAttachFile.TabIndex = 10;
@@ -139,33 +142,115 @@
             // 
             // lvSensors
             // 
-            lvSensors.Location = new Point(354, 107);
+            lvSensors.Columns.AddRange(new ColumnHeader[] { columnHeader1, columnHeader2, columnHeader3, columnHeader4, columnHeader5 });
+            lvSensors.Location = new Point(357, 82);
             lvSensors.Name = "lvSensors";
-            lvSensors.Size = new Size(417, 177);
+            lvSensors.Size = new Size(417, 82);
             lvSensors.TabIndex = 11;
             lvSensors.UseCompatibleStateImageBehavior = false;
+            lvSensors.View = View.Details;
             // 
             // lblCategoryHint
             // 
             lblCategoryHint.AutoSize = true;
             lblCategoryHint.Font = new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lblCategoryHint.ForeColor = SystemColors.ActiveBorder;
-            lblCategoryHint.Location = new Point(207, 292);
+            lblCategoryHint.Location = new Point(164, 307);
             lblCategoryHint.Name = "lblCategoryHint";
             lblCategoryHint.Size = new Size(38, 13);
             lblCategoryHint.TabIndex = 12;
             lblCategoryHint.Text = "label6";
+            // 
+            // txtFacility
+            // 
+            txtFacility.Location = new Point(164, 229);
+            txtFacility.Name = "txtFacility";
+            txtFacility.Size = new Size(100, 23);
+            txtFacility.TabIndex = 13;
+            // 
+            // txtZone
+            // 
+            txtZone.Location = new Point(299, 229);
+            txtZone.Name = "txtZone";
+            txtZone.Size = new Size(100, 23);
+            txtZone.TabIndex = 14;
+            // 
+            // txtSubZone
+            // 
+            txtSubZone.Location = new Point(434, 229);
+            txtSubZone.Name = "txtSubZone";
+            txtSubZone.Size = new Size(100, 23);
+            txtSubZone.TabIndex = 15;
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Font = new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label6.Location = new Point(164, 213);
+            label6.Name = "label6";
+            label6.Size = new Size(42, 13);
+            label6.TabIndex = 16;
+            label6.Text = "Facility";
+            // 
+            // label7
+            // 
+            label7.AutoSize = true;
+            label7.Font = new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label7.Location = new Point(299, 213);
+            label7.Name = "label7";
+            label7.Size = new Size(33, 13);
+            label7.TabIndex = 17;
+            label7.Text = "Zone";
+            // 
+            // label8
+            // 
+            label8.AutoSize = true;
+            label8.Font = new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label8.Location = new Point(434, 213);
+            label8.Name = "label8";
+            label8.Size = new Size(57, 13);
+            label8.TabIndex = 18;
+            label8.Text = "Sub-Zone";
+            // 
+            // columnHeader1
+            // 
+            columnHeader1.Text = "Name";
+            columnHeader1.Width = 80;
+            // 
+            // columnHeader2
+            // 
+            columnHeader2.Text = "MAC Address";
+            columnHeader2.Width = 90;
+            // 
+            // columnHeader3
+            // 
+            columnHeader3.Text = "Location";
+            columnHeader3.Width = 100;
+            // 
+            // columnHeader4
+            // 
+            columnHeader4.Text = "Category";
+            // 
+            // columnHeader5
+            // 
+            columnHeader5.Text = "Registered at";
+            columnHeader5.Width = 80;
             // 
             // IngestionForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(label8);
+            Controls.Add(label7);
+            Controls.Add(label6);
+            Controls.Add(txtSubZone);
+            Controls.Add(txtZone);
+            Controls.Add(txtFacility);
             Controls.Add(lblCategoryHint);
             Controls.Add(lvSensors);
             Controls.Add(btnAttachFile);
             Controls.Add(cmbCategory);
-            Controls.Add(txtLocation);
             Controls.Add(txtName);
             Controls.Add(txtMacAddress);
             Controls.Add(label5);
@@ -190,10 +275,20 @@
         private Label label5;
         private TextBox txtMacAddress;
         private TextBox txtName;
-        private TextBox txtLocation;
         private ComboBox cmbCategory;
         private Button btnAttachFile;
         private ListView lvSensors;
         private Label lblCategoryHint;
+        private TextBox txtFacility;
+        private TextBox txtZone;
+        private TextBox txtSubZone;
+        private Label label6;
+        private Label label7;
+        private Label label8;
+        private ColumnHeader columnHeader1;
+        private ColumnHeader columnHeader2;
+        private ColumnHeader columnHeader3;
+        private ColumnHeader columnHeader4;
+        private ColumnHeader columnHeader5;
     }
 }

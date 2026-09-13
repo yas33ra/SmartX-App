@@ -31,7 +31,7 @@ namespace SmartX.API.Endpoints
 
         //----------------------------------------------------------------------------
 
-            app.MapGet("/sensors/ {id}", (Guid id, SensorRegistry registry) =>
+            app.MapGet("/sensors/{id}", (Guid id, SensorRegistry registry) =>
                 {
                     var sensor = registry.GetById(id);
                     return sensor is not null ? Results.Ok(sensor) : Results.NotFound();

@@ -12,6 +12,13 @@ namespace SmartX.API.Storage
 
         public Sensor Add(Sensor sensor) //Add sensors to the list 
         {
+            var hierarchy = sensor.BuildDeploymentHierarchy();
+
+            if (!hierarchy.ValidateHierarchy())
+            {
+                throw new InvalidOperationException("Sensor deployment hierarchy is invalid or incomplete.");
+            }
+
             _sensors.Add(sensor);
             return sensor;
         }

@@ -17,3 +17,22 @@ Content-Type: application/json
 ### Get all sensors again (should now show one)
 GET {{SmartX.Api_HostAddress}}/sensors
 Accept: application/json
+
+
+### Test the default weather endpoint
+GET http://localhost:5056/weatherforecast
+Accept: application/json
+
+
+### Test sensor registration directly
+POST http://localhost:5056/sensors
+Content-Type: application/json
+
+{
+  "name": "Test Sensor",
+  "macAddress": "A1:B2:C3:D4:E5:F6",
+  "facility": "Facility A",
+  "zone": "Zone 1",
+  "subZone": "Sub-Zone B",
+  "category": 0
+}

@@ -1,5 +1,5 @@
 ﻿//This  tells forms how to construct HTTP requests
-using SmartX.API.Models;
+using SmartX.Client.Models;
 using System;
 using System.Collections.Generic;
 using System.Net.Http.Json;
@@ -21,7 +21,7 @@ namespace SmartX.Client.Services
 
         public async Task <Sensor?> RegisterSensorAsync(Sensor sensor)
         {
-            var response = await _http.PatchAsJsonAsync("/sensor", sensor);
+            var response = await _http.PostAsJsonAsync("/sensors", sensor);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<Sensor>();
         }

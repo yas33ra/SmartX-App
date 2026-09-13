@@ -1,4 +1,4 @@
-﻿using SmartX.API.Models;
+﻿using SmartX.Client.Models;
 using SmartX.Client.Services;
 using System;
 using System.Collections.Generic;
@@ -27,7 +27,9 @@ namespace SmartX.Client
             {
                 Name = txtName.Text,
                 MacAddress = txtMacAddress.Text,
-                Location = txtLocation.Text,
+                Facility = txtFacility.Text,
+                Zone = txtZone.Text,
+                SubZone = txtSubZone.Text,
                 Category = (SensorCategory)cmbCategory.SelectedItem
             };
 
@@ -49,7 +51,9 @@ namespace SmartX.Client
         {
             txtName.Clear();
             txtMacAddress.Clear();
-            txtLocation.Clear();
+            txtFacility.Clear();
+            txtZone.Clear();
+            txtSubZone.Clear();
             cmbCategory.SelectedIndex = -1;
         }
 
@@ -63,7 +67,7 @@ namespace SmartX.Client
             {
                 var item = new ListViewItem(sensor.Name);
                 item.SubItems.Add(sensor.MacAddress);
-                item.SubItems.Add(sensor.Location);
+                item.SubItems.Add($"{sensor.Facility} / {sensor.Zone} / {sensor.SubZone}");
                 item.SubItems.Add(sensor.Category.ToString());
                 item.SubItems.Add(sensor.RegisteredAt.ToLocalTime().ToString("g"));
                 lvSensors.Items.Add(item);
