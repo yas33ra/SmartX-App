@@ -118,8 +118,8 @@ namespace SmartX.Client
 
         private void btnBacktoDash_Click(object sender, EventArgs e)
         {
-            var sensorDashboardForm = new SensorDashboardForm();
-            sensorDashboardForm.Show();
+            MainMenuForm mainMenu = new MainMenuForm();
+            mainMenu.Show();
             this.Hide();
         }
     }

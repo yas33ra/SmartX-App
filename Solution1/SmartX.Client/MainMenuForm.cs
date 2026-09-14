@@ -9,8 +9,8 @@ namespace SmartX.Client
 
         private void btnIngestion_Click(object sender, EventArgs e)
         {
-            var sensorDashboardForm = new SensorDashboardForm();
-            sensorDashboardForm.Show();
+            IngestionForm ingestionForm = new IngestionForm();
+            ingestionForm.Show();
             this.Hide();
         }
     }
