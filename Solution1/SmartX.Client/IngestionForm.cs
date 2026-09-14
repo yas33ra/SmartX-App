@@ -115,5 +115,12 @@ namespace SmartX.Client
                 lblSelectedFile.Text = Path.GetFileName(dialog.FileName);
             }
         }
+
+        private void btnBacktoDash_Click(object sender, EventArgs e)
+        {
+            var sensorDashboardForm = new SensorDashboardForm();
+            sensorDashboardForm.Show();
+            this.Hide();
+        }
     }
 }

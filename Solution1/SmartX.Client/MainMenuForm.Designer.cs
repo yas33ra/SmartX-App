@@ -38,37 +38,49 @@
             // 
             // btnCommandStream
             // 
+            btnCommandStream.BackColor = Color.Transparent;
+            btnCommandStream.FlatStyle = FlatStyle.Flat;
+            btnCommandStream.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnCommandStream.ForeColor = SystemColors.ControlLightLight;
             btnCommandStream.Location = new Point(338, 267);
             btnCommandStream.Name = "btnCommandStream";
             btnCommandStream.Size = new Size(139, 95);
             btnCommandStream.TabIndex = 0;
             btnCommandStream.Text = "Real-Time Command Stream and History";
-            btnCommandStream.UseVisualStyleBackColor = true;
+            btnCommandStream.UseVisualStyleBackColor = false;
             // 
             // btnTopology
             // 
+            btnTopology.BackColor = Color.Transparent;
+            btnTopology.FlatStyle = FlatStyle.Flat;
+            btnTopology.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnTopology.ForeColor = SystemColors.ControlLightLight;
             btnTopology.Location = new Point(592, 267);
             btnTopology.Name = "btnTopology";
             btnTopology.Size = new Size(139, 95);
             btnTopology.TabIndex = 1;
             btnTopology.Text = "Network Topology and Mesh Routing";
-            btnTopology.UseVisualStyleBackColor = true;
+            btnTopology.UseVisualStyleBackColor = false;
             // 
             // btnIngestion
             // 
+            btnIngestion.BackColor = Color.Transparent;
+            btnIngestion.FlatStyle = FlatStyle.Flat;
+            btnIngestion.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnIngestion.ForeColor = SystemColors.ControlLightLight;
             btnIngestion.Location = new Point(90, 267);
             btnIngestion.Name = "btnIngestion";
             btnIngestion.Size = new Size(139, 95);
             btnIngestion.TabIndex = 2;
             btnIngestion.Text = "Sensor Data Ingestion and Telemetry";
-            btnIngestion.UseVisualStyleBackColor = true;
+            btnIngestion.UseVisualStyleBackColor = false;
             btnIngestion.Click += btnIngestion_Click;
             // 
             // label1
             // 
             label1.AutoSize = true;
             label1.ForeColor = SystemColors.ControlDark;
-            label1.Location = new Point(359, 333);
+            label1.Location = new Point(359, 365);
             label1.Name = "label1";
             label1.Size = new Size(96, 15);
             label1.TabIndex = 3;
@@ -78,7 +90,7 @@
             // 
             label2.AutoSize = true;
             label2.ForeColor = SystemColors.ControlDark;
-            label2.Location = new Point(614, 333);
+            label2.Location = new Point(623, 365);
             label2.Name = "label2";
             label2.Size = new Size(96, 15);
             label2.TabIndex = 4;
