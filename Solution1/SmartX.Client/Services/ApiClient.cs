@@ -32,5 +32,16 @@ namespace SmartX.Client.Services
             return sensors ?? new List<Sensor>();
         }
 
+        public async Task UploadFileAsync(Guid sensorId, string filePath)
+        {
+            using var content = new MultipartFormDataContent();
+            using var fileStream = File.OpenRead(filePath);
+            using var fileContent = new StreamContent(fileStream);
+
+            content.Add(fileContent, "file", Path.GetFileName(filePath));
+
+            var response = await _http.PostAsync($"/sensors/{sensorId}/upload", content);
+            response.EnsureSuccessStatusCode();
+        }
     }
 }

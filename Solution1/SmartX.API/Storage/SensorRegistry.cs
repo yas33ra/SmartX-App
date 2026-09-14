@@ -36,5 +36,17 @@ namespace SmartX.API.Storage
         {
             return _sensors.FirstOrDefault(s => s.Id == id);
         }
+
+        
+    //-----------------------------------------------------------------
+
+        public void UpdateAttachedFile(Guid id, string filePath)//updates the object so there is no need to remove it
+        {
+            var sensor = GetById(id);
+            if (sensor is not null)
+            {
+                sensor.AttachedFilePath = filePath;
+            }
+        }
     }
 }

@@ -36,6 +36,39 @@ namespace SmartX.API.Endpoints
                     var sensor = registry.GetById(id);
                     return sensor is not null ? Results.Ok(sensor) : Results.NotFound();
                 });
+
+
+            //----------------------------------------------------------------------------
+
+
+            app.MapPost("/sensors/{id}/upload", async (Guid id, IFormFile file, SensorRegistry registry) =>
+                {
+                var sensor = registry.GetById(id);
+                    if (sensor is null)
+                    {
+                        return Results.NotFound();
+                    }
+
+                    var uploadsFolder = Path.Combine(AppContext.BaseDirectory, "Uploads");
+                    Directory.CreateDirectory(uploadsFolder);
+
+                    var fileName = $"{id}_{file.FileName}";
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create)) 
+                    {
+                    
+                        await file.CopyToAsync(stream);
+                    }
+
+                    registry.UpdateAttachedFile(id, filePath);
+
+                    return Results.Ok(sensor);
+
+
+                })
+                .DisableAntiforgery();
+
         }
     }
 }

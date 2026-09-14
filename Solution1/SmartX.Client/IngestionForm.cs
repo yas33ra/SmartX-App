@@ -13,6 +13,8 @@ namespace SmartX.Client
     public partial class IngestionForm : Form
     {
         private readonly ApiClient _apiClient = new(); //ApiClient added as a field variable to allow access across all methods in the form
+        private string? _selectedFilePath;
+
         public IngestionForm()
         {
             InitializeComponent();
@@ -36,7 +38,15 @@ namespace SmartX.Client
 
             try
             {
-                await _apiClient.RegisterSensorAsync(sensor);
+                var registered = await _apiClient.RegisterSensorAsync(sensor);
+
+                if (registered is not null && _selectedFilePath is not null)
+                {
+                    await _apiClient.UploadFileAsync(registered.Id, _selectedFilePath);
+                }
+
+                _selectedFilePath = null;
+                lblSelectedFile.Text = "No file selected";
                 ClearForm();
                 await RefreshSensorListAsync();
             }
@@ -89,6 +99,21 @@ namespace SmartX.Client
                 SensorCategory.Control => "A controllable device, e.g. valves, relays",
                 _ => string.Empty
             };
+        }
+
+        private void btnAttachFile_Click(object sender, EventArgs e)
+        {
+            using var dialog = new OpenFileDialog
+            {
+                Title = "Select a configuration file, photo, or log",
+                Filter = "All Files (*.*)|*.*"
+            };
+
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                _selectedFilePath = dialog.FileName;
+                lblSelectedFile.Text = Path.GetFileName(dialog.FileName);
+            }
         }
     }
 }

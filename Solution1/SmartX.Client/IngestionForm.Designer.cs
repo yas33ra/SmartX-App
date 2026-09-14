@@ -39,6 +39,11 @@
             cmbCategory = new ComboBox();
             btnAttachFile = new Button();
             lvSensors = new ListView();
+            columnHeader1 = new ColumnHeader();
+            columnHeader2 = new ColumnHeader();
+            columnHeader3 = new ColumnHeader();
+            columnHeader4 = new ColumnHeader();
+            columnHeader5 = new ColumnHeader();
             lblCategoryHint = new Label();
             txtFacility = new TextBox();
             txtZone = new TextBox();
@@ -46,11 +51,7 @@
             label6 = new Label();
             label7 = new Label();
             label8 = new Label();
-            columnHeader1 = new ColumnHeader();
-            columnHeader2 = new ColumnHeader();
-            columnHeader3 = new ColumnHeader();
-            columnHeader4 = new ColumnHeader();
-            columnHeader5 = new ColumnHeader();
+            lblSelectedFile = new Label();
             SuspendLayout();
             // 
             // label1
@@ -91,7 +92,7 @@
             // 
             // btnRegister
             // 
-            btnRegister.Location = new Point(268, 415);
+            btnRegister.Location = new Point(187, 399);
             btnRegister.Name = "btnRegister";
             btnRegister.Size = new Size(173, 23);
             btnRegister.TabIndex = 4;
@@ -133,12 +134,13 @@
             // 
             // btnAttachFile
             // 
-            btnAttachFile.Location = new Point(164, 353);
+            btnAttachFile.Location = new Point(43, 349);
             btnAttachFile.Name = "btnAttachFile";
             btnAttachFile.Size = new Size(75, 23);
             btnAttachFile.TabIndex = 10;
             btnAttachFile.Text = "Attach Image";
             btnAttachFile.UseVisualStyleBackColor = true;
+            btnAttachFile.Click += btnAttachFile_Click;
             // 
             // lvSensors
             // 
@@ -149,6 +151,30 @@
             lvSensors.TabIndex = 11;
             lvSensors.UseCompatibleStateImageBehavior = false;
             lvSensors.View = View.Details;
+            // 
+            // columnHeader1
+            // 
+            columnHeader1.Text = "Name";
+            columnHeader1.Width = 80;
+            // 
+            // columnHeader2
+            // 
+            columnHeader2.Text = "MAC Address";
+            columnHeader2.Width = 90;
+            // 
+            // columnHeader3
+            // 
+            columnHeader3.Text = "Location";
+            columnHeader3.Width = 100;
+            // 
+            // columnHeader4
+            // 
+            columnHeader4.Text = "Category";
+            // 
+            // columnHeader5
+            // 
+            columnHeader5.Text = "Registered at";
+            columnHeader5.Width = 80;
             // 
             // lblCategoryHint
             // 
@@ -212,35 +238,22 @@
             label8.TabIndex = 18;
             label8.Text = "Sub-Zone";
             // 
-            // columnHeader1
+            // lblSelectedFile
             // 
-            columnHeader1.Text = "Name";
-            columnHeader1.Width = 80;
-            // 
-            // columnHeader2
-            // 
-            columnHeader2.Text = "MAC Address";
-            columnHeader2.Width = 90;
-            // 
-            // columnHeader3
-            // 
-            columnHeader3.Text = "Location";
-            columnHeader3.Width = 100;
-            // 
-            // columnHeader4
-            // 
-            columnHeader4.Text = "Category";
-            // 
-            // columnHeader5
-            // 
-            columnHeader5.Text = "Registered at";
-            columnHeader5.Width = 80;
+            lblSelectedFile.AutoSize = true;
+            lblSelectedFile.ForeColor = SystemColors.ControlDarkDark;
+            lblSelectedFile.Location = new Point(39, 375);
+            lblSelectedFile.Name = "lblSelectedFile";
+            lblSelectedFile.Size = new Size(88, 15);
+            lblSelectedFile.TabIndex = 19;
+            lblSelectedFile.Text = "No file selected";
             // 
             // IngestionForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(lblSelectedFile);
             Controls.Add(label8);
             Controls.Add(label7);
             Controls.Add(label6);
@@ -290,5 +303,6 @@
         private ColumnHeader columnHeader3;
         private ColumnHeader columnHeader4;
         private ColumnHeader columnHeader5;
+        private Label lblSelectedFile;
     }
 }
