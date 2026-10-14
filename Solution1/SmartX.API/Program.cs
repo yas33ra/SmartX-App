@@ -24,6 +24,8 @@ namespace SmartX.API
 
             app.MapSensorEndpoints ();
 
+            app.MapTelemetryEndpoints();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
