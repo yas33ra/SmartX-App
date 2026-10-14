@@ -24,6 +24,13 @@ namespace SmartX.Client
 
         private async void btnRegister_Click(object sender, EventArgs e)
         {
+            // stop early if nothing is chosen
+            if (cmbCategory.SelectedItem is null)
+            {
+                MessageBox.Show("Please choose a category.", "Missing category",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             var sensor = new Sensor
             {
@@ -34,7 +41,6 @@ namespace SmartX.Client
                 SubZone = txtSubZone.Text,
                 Category = (SensorCategory)cmbCategory.SelectedItem
             };
-
 
             try
             {
@@ -52,11 +58,11 @@ namespace SmartX.Client
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to register sensor: {ex.Message}");
+                
+                MessageBox.Show(ex.Message, "Could not register sensor",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-
         }
-
         private void ClearForm()
         {
             txtName.Clear();
