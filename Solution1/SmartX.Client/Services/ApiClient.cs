@@ -19,13 +19,20 @@ namespace SmartX.Client.Services
             };
         }
 
-        public async Task <Sensor?> RegisterSensorAsync(Sensor sensor)
+        public async Task<Sensor?> RegisterSensorAsync(Sensor sensor)
         {
             var response = await _http.PostAsJsonAsync("/sensors", sensor);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var body = await response.Content.ReadFromJsonAsync<ValidationResponse>();
+                var message = string.Join(Environment.NewLine, body?.Errors ?? new List<string>());
+                throw new InvalidOperationException(message);
+            }
+
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<Sensor>();
         }
-
         public async Task<List<Sensor>> GetAllSensorsAsync()
         {
             var sensors = await _http.GetFromJsonAsync<List<Sensor>>("/sensors");
@@ -43,5 +50,10 @@ namespace SmartX.Client.Services
             var response = await _http.PostAsync($"/sensors/{sensorId}/upload", content);
             response.EnsureSuccessStatusCode();
         }
+    }
+
+    internal class ValidationResponse
+    {
+        public List<string> Errors { get; set; } = new();
     }
 }
