@@ -1,4 +1,5 @@
 using SmartX.API.Endpoints;
+using SmartX.API.Models;
 using SmartX.API.Storage;
 
 namespace SmartX.API
@@ -49,7 +50,6 @@ namespace SmartX.API
                 return forecast;
             })
             .WithName("GetWeatherForecast");
-
             app.Run();
         }
     }
