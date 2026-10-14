@@ -3,6 +3,7 @@
 
 using SmartX.API.Models;
 using SmartX.API.Storage;
+using SmartX.API.Validation;
 using System.Runtime.CompilerServices;
 
 namespace SmartX.API.Endpoints
@@ -12,16 +13,24 @@ namespace SmartX.API.Endpoints
         public static void MapSensorEndpoints (this WebApplication app)
         {
 
-        //----------------------------------------------------------------------------
+            //----------------------------------------------------------------------------
 
             app.MapPost("/sensors", (Sensor sensor, SensorRegistry registry) =>
             {
+                var errors = SensorValidator.Validate(sensor);
+
+                if (errors.Count == 0 && registry.MacExists(sensor.MacAddress))
+                    errors.Add("A sensor with this MAC address is already registered.");
+
+                if (errors.Count > 0)
+                    return Results.BadRequest(new { errors });
+
                 var created = registry.Add(sensor);
                 return Results.Created($"/sensors/{created.Id}", created);
             });
 
 
-        //----------------------------------------------------------------------------
+            //----------------------------------------------------------------------------
 
             app.MapGet("/sensors", (SensorRegistry registry) =>
             {
