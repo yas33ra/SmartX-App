@@ -1,38 +1,19 @@
-@SmartX.Api_HostAddress = http://localhost:5056
 
-### Get all sensors (should be empty at first)
-GET {{SmartX.Api_HostAddress}}/sensors
-Accept: application/json
-
-### Register a new sensor
-POST {{SmartX.Api_HostAddress}}/sensors
+POST http://localhost:5056/telemetry/climate
 Content-Type: application/json
 
-{
-  "macAddress": "A1:B2:C3:D4:E5:F6",
-  "location": "Greenhouse 3 / Zone B",
-  "category": "Environmental"
-}
+{ "sensorId": "c095f308-6160-4637-a7bc-965f3c548b0b", "value": 23.5 }
 
-### Get all sensors again (should now show one)
-GET {{SmartX.Api_HostAddress}}/sensors
-Accept: application/json
+###
 
-
-### Test the default weather endpoint
-GET http://localhost:5056/weatherforecast
-Accept: application/json
-
-
-### Test sensor registration directly
-POST http://localhost:5056/sensors
+POST http://localhost:5056/telemetry/electrical
 Content-Type: application/json
 
-{
-  "name": "Test Sensor",
-  "macAddress": "A1:B2:C3:D4:E5:F6",
-  "facility": "Facility A",
-  "zone": "Zone 1",
-  "subZone": "Sub-Zone B",
-  "category": 0
-}
+{ "sensorId": "c095f308-6160-4637-a7bc-965f3c548b0b", "value": { "watts": 1200 } }
+
+###
+
+POST http://localhost:5056/telemetry/control
+Content-Type: application/json
+
+{ "sensorId": "51e58b09-ac13-439f-a75f-a24e353e3cab", "value": true }

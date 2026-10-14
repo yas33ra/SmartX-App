@@ -7,7 +7,7 @@ Tracks every change made in response to lecturer feedback. Part 3 requires this 
 | # | Lecturer feedback | Planned fix | Status | Commit |
 |---|---|---|---|---|
 | 1 | Input validation bugs (MAC, location, category) | Shared validator on the API plus client-side checks; reject duplicate MACs | Done | |
-| 2 | Generics: boxing/unboxing concerns | Create and use `TelemetryPacket<T>` with typed telemetry endpoints | To do | |
+| 2 | Generics: boxing/unboxing concerns | Create and use `TelemetryPacket<T>` with typed telemetry endpoints | Done | |
 | 3 | Operator overloading without structural purpose | Use `PowerReading` on real telemetry in the dashboard | To do | |
 | 4 | No jagged/multi-dimensional arrays | `HistoricalBatchStore` (`float[][]` flushed into `List<T>`) | To do | |
 | 5 | Recursion lacks depth safety | Max-depth guard and cycle detection in `ValidateHierarchy()` |  Done | |

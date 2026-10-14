@@ -25,6 +25,9 @@ namespace SmartX.API.Endpoints
                 if (errors.Count > 0)
                     return Results.BadRequest(new { errors });
 
+                sensor.Id = Guid.NewGuid();
+                sensor.RegisteredAt = DateTime.UtcNow;
+
                 var created = registry.Add(sensor);
                 return Results.Created($"/sensors/{created.Id}", created);
             });
