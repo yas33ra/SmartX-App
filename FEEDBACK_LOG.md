@@ -6,11 +6,11 @@ Tracks every change made in response to lecturer feedback. Part 3 requires this 
 
 | # | Lecturer feedback | Planned fix | Status | Commit |
 |---|---|---|---|---|
-| 1 | Input validation bugs (MAC, location, category) | Shared validator on the API plus client-side checks; reject duplicate MACs | In progress | |
+| 1 | Input validation bugs (MAC, location, category) | Shared validator on the API plus client-side checks; reject duplicate MACs | Done | |
 | 2 | Generics: boxing/unboxing concerns | Create and use `TelemetryPacket<T>` with typed telemetry endpoints | To do | |
 | 3 | Operator overloading without structural purpose | Use `PowerReading` on real telemetry in the dashboard | To do | |
 | 4 | No jagged/multi-dimensional arrays | `HistoricalBatchStore` (`float[][]` flushed into `List<T>`) | To do | |
-| 5 | Recursion lacks depth safety | Max-depth guard and cycle detection in `ValidateHierarchy()` | To do | |
+| 5 | Recursion lacks depth safety | Max-depth guard and cycle detection in `ValidateHierarchy()` |  Done | |
 | 6 | File attachment not working | Harden upload (size limit, extension allow-list, safe filename, encryption); show attachment in UI | To do | |
 | 7 | No list used for user-reported issues | Engagement feature plus `List<Alert>` (spikes and disconnects) | To do | |
 | 8 | Layout broken / no resizing | `Dock`/`Anchor`, `TableLayoutPanel`, consistent typography | To do | |

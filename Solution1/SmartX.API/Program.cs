@@ -18,6 +18,8 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<SensorRegistry>(); // one instance of SensorRegistry
 
+            builder.Services.AddSingleton<TelemetryStore>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
