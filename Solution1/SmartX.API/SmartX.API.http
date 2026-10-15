@@ -17,3 +17,10 @@ POST http://localhost:5056/telemetry/control
 Content-Type: application/json
 
 { "sensorId": "51e58b09-ac13-439f-a75f-a24e353e3cab", "value": true }
+
+###
+
+POST http://localhost:5056/telemetry/climate/batch
+Content-Type: application/json
+
+{ "sensorId": "68b4f3d0-b1f9-44be-9917-6e1b56b55ac1", "batches": [[21.5], null, [22.0], [22.4], [22.9, 23.1, 23.3, 23.0]], "intervalSeconds": 30 }

@@ -10,6 +10,10 @@ namespace SmartX.API.Endpoints
 {
     public static class SensorEndpoints
     {
+        private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
+
+        private static readonly HashSet<string> AllowedExtensions =
+            new(StringComparer.OrdinalIgnoreCase) { ".txt", ".log", ".csv", ".pdf", ".png", ".jpg", ".jpeg" };
         public static void MapSensorEndpoints (this WebApplication app)
         {
 
@@ -61,13 +65,32 @@ namespace SmartX.API.Endpoints
                         return Results.NotFound();
                     }
 
+                    if (file is null || file.Length == 0)
+                    {
+                        return Results.BadRequest(new { errors = new[] { "Choose a file to upload." } });
+                    }
+
+                    if (file.Length > MaxFileSizeBytes)
+                    {
+                        return Results.BadRequest(new { errors = new[] { "File is too large. The maximum size is 5 MB." } });
+                    }
+
+                    var extension = Path.GetExtension(file.FileName);
+                    if (!AllowedExtensions.Contains(extension))
+                    {
+                        return Results.BadRequest(new
+                        {
+                            errors = new[] { $"File type '{extension}' is not allowed. Allowed: {string.Join(", ", AllowedExtensions)}." }
+                        });
+                    }
+
                     var uploadsFolder = Path.Combine(AppContext.BaseDirectory, "Uploads");
                     Directory.CreateDirectory(uploadsFolder);
 
-                    var fileName = $"{id}_{file.FileName}";
+                    var fileName = $"{id}_{Guid.NewGuid():N}{extension}";
                     var filePath = Path.Combine(uploadsFolder, fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create)) 
+                    using (var stream = new FileStream(filePath, FileMode.Create)) 
                     {
                     
                         await file.CopyToAsync(stream);
