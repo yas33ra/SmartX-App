@@ -15,6 +15,9 @@ namespace SmartX.Client
         private readonly ApiClient _apiClient = new(); //ApiClient added as a field variable to allow access across all methods in the form
         private string? _selectedFilePath;
 
+        private static readonly string[] AllowedExtensions = { ".txt", ".log", ".csv", ".pdf", ".png", ".jpg", ".jpeg" };
+        private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB, same as the API
+
         public IngestionForm()
         {
             InitializeComponent();
@@ -112,11 +115,27 @@ namespace SmartX.Client
             using var dialog = new OpenFileDialog
             {
                 Title = "Select a configuration file, photo, or log",
-                Filter = "All Files (*.*)|*.*"
+                Filter = "Supported files|*.txt;*.log;*.csv;*.pdf;*.png;*.jpg;*.jpeg|All files (*.*)|*.*"
             };
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
+                var extension = Path.GetExtension(dialog.FileName).ToLowerInvariant();
+
+                if (!AllowedExtensions.Contains(extension))
+                {
+                    MessageBox.Show($"File type '{extension}' is not allowed.\nAllowed: {string.Join(", ", AllowedExtensions)}",
+                        "Unsupported file", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (new FileInfo(dialog.FileName).Length > MaxFileSizeBytes)
+                {
+                    MessageBox.Show("That file is larger than 5 MB.", "File too large",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 _selectedFilePath = dialog.FileName;
                 lblSelectedFile.Text = Path.GetFileName(dialog.FileName);
             }
