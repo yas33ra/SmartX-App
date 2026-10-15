@@ -61,7 +61,7 @@ namespace SmartX.Client
             }
             catch (Exception ex)
             {
-                
+
                 MessageBox.Show(ex.Message, "Could not register sensor",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
@@ -146,6 +146,11 @@ namespace SmartX.Client
             MainMenuForm mainMenu = new MainMenuForm();
             mainMenu.Show();
             this.Hide();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
