@@ -69,6 +69,41 @@ namespace SmartX.API.Endpoints
 
             app.MapGet("/telemetry/control", (TelemetryStore store) =>
                 Results.Ok(store.GetControl()));
+
+
+            app.MapPost("/telemetry/climate/batch",
+    (ClimateBatchRequest request, SensorRegistry registry, TelemetryStore store) =>
+    {
+        var problem = CheckSensor(request.SensorId, SensorCategory.Climate, registry);
+        if (problem is not null)
+        {
+            return problem;
+        }
+
+        if (request.Batches is null || request.Batches.Length == 0)
+        {
+            return Results.BadRequest(new { errors = new[] { "Send at least one batch of readings." } });
+        }
+
+        int totalReadings = request.Batches.Sum(batch => batch?.Length ?? 0);
+        if (totalReadings == 0 || totalReadings > 10000)
+        {
+            return Results.BadRequest(new { errors = new[] { "A upload must contain between 1 and 10000 readings." } });
+        }
+
+        var start = request.FirstReadingAt ?? DateTime.UtcNow;
+        var interval = TimeSpan.FromSeconds(request.IntervalSeconds > 0 ? request.IntervalSeconds : 60);
+
+        // raw jagged array to typed List of packets
+        var packets = ReadingBatchConverter.ToPackets(request.SensorId, request.Batches, start, interval);
+
+        foreach (var packet in packets)
+        {
+            store.AddClimate(packet);
+        }
+
+        return Results.Ok(new { received = packets.Count });
+    });
         }
 
         // Shared check: does the sensor exist, and is it the right category for this route?

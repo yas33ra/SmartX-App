@@ -1,4 +1,5 @@
-﻿using SmartX.API.Models;
+﻿// turns raw batches of readings (a jagged array) into typed telemetry packets
+using SmartX.API.Models;
 
 namespace SmartX.API.Storage
 {
