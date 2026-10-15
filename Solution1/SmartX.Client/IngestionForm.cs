@@ -15,6 +15,9 @@ namespace SmartX.Client
         private readonly ApiClient _apiClient = new(); //ApiClient added as a field variable to allow access across all methods in the form
         private string? _selectedFilePath;
 
+        private static readonly string[] AllowedExtensions = { ".txt", ".log", ".csv", ".pdf", ".png", ".jpg", ".jpeg" };
+        private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB, same as the API
+
         public IngestionForm()
         {
             InitializeComponent();
@@ -24,6 +27,13 @@ namespace SmartX.Client
 
         private async void btnRegister_Click(object sender, EventArgs e)
         {
+            // stop early if nothing is chosen
+            if (cmbCategory.SelectedItem is null)
+            {
+                MessageBox.Show("Please choose a category.", "Missing category",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
             var sensor = new Sensor
             {
@@ -34,7 +44,6 @@ namespace SmartX.Client
                 SubZone = txtSubZone.Text,
                 Category = (SensorCategory)cmbCategory.SelectedItem
             };
-
 
             try
             {
@@ -52,11 +61,11 @@ namespace SmartX.Client
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to register sensor: {ex.Message}");
+
+                MessageBox.Show(ex.Message, "Could not register sensor",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-
         }
-
         private void ClearForm()
         {
             txtName.Clear();
@@ -106,11 +115,27 @@ namespace SmartX.Client
             using var dialog = new OpenFileDialog
             {
                 Title = "Select a configuration file, photo, or log",
-                Filter = "All Files (*.*)|*.*"
+                Filter = "Supported files|*.txt;*.log;*.csv;*.pdf;*.png;*.jpg;*.jpeg|All files (*.*)|*.*"
             };
 
             if (dialog.ShowDialog() == DialogResult.OK)
             {
+                var extension = Path.GetExtension(dialog.FileName).ToLowerInvariant();
+
+                if (!AllowedExtensions.Contains(extension))
+                {
+                    MessageBox.Show($"File type '{extension}' is not allowed.\nAllowed: {string.Join(", ", AllowedExtensions)}",
+                        "Unsupported file", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (new FileInfo(dialog.FileName).Length > MaxFileSizeBytes)
+                {
+                    MessageBox.Show("That file is larger than 5 MB.", "File too large",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 _selectedFilePath = dialog.FileName;
                 lblSelectedFile.Text = Path.GetFileName(dialog.FileName);
             }
@@ -121,6 +146,11 @@ namespace SmartX.Client
             MainMenuForm mainMenu = new MainMenuForm();
             mainMenu.Show();
             this.Hide();
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

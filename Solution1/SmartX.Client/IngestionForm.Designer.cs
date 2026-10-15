@@ -60,7 +60,7 @@
             // 
             // label1
             // 
-            label1.AutoSize = true;
+            label1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label1.BackColor = Color.Transparent;
             label1.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
             label1.ForeColor = SystemColors.ActiveCaptionText;
@@ -69,10 +69,11 @@
             label1.Size = new Size(237, 21);
             label1.TabIndex = 0;
             label1.Text = "Sensor Data and Live Telemetry";
+            label1.Click += label1_Click;
             // 
             // label2
             // 
-            label2.AutoSize = true;
+            label2.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label2.BackColor = Color.Transparent;
             label2.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label2.ForeColor = SystemColors.ActiveCaptionText;
@@ -84,7 +85,7 @@
             // 
             // label3
             // 
-            label3.AutoSize = true;
+            label3.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label3.BackColor = Color.Transparent;
             label3.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label3.ForeColor = SystemColors.ActiveCaptionText;
@@ -96,7 +97,7 @@
             // 
             // label4
             // 
-            label4.AutoSize = true;
+            label4.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label4.BackColor = Color.Transparent;
             label4.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label4.ForeColor = SystemColors.ActiveCaptionText;
@@ -108,6 +109,7 @@
             // 
             // btnRegister
             // 
+            btnRegister.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnRegister.BackColor = Color.Cornsilk;
             btnRegister.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btnRegister.ForeColor = SystemColors.ActiveCaptionText;
@@ -121,7 +123,7 @@
             // 
             // label5
             // 
-            label5.AutoSize = true;
+            label5.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label5.BackColor = Color.Transparent;
             label5.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label5.ForeColor = SystemColors.ActiveCaptionText;
@@ -133,6 +135,7 @@
             // 
             // txtMacAddress
             // 
+            txtMacAddress.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtMacAddress.Location = new Point(146, 100);
             txtMacAddress.Name = "txtMacAddress";
             txtMacAddress.Size = new Size(129, 23);
@@ -140,6 +143,7 @@
             // 
             // txtName
             // 
+            txtName.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtName.Location = new Point(146, 57);
             txtName.Name = "txtName";
             txtName.Size = new Size(129, 23);
@@ -147,6 +151,7 @@
             // 
             // cmbCategory
             // 
+            cmbCategory.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             cmbCategory.FormattingEnabled = true;
             cmbCategory.Location = new Point(116, 263);
             cmbCategory.Name = "cmbCategory";
@@ -156,6 +161,7 @@
             // 
             // btnAttachFile
             // 
+            btnAttachFile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnAttachFile.ForeColor = SystemColors.ActiveCaptionText;
             btnAttachFile.Location = new Point(26, 292);
             btnAttachFile.Name = "btnAttachFile";
@@ -167,6 +173,7 @@
             // 
             // lvSensors
             // 
+            lvSensors.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lvSensors.Columns.AddRange(new ColumnHeader[] { columnHeader1, columnHeader2, columnHeader3, columnHeader4, columnHeader5 });
             lvSensors.Location = new Point(365, 111);
             lvSensors.Name = "lvSensors";
@@ -211,6 +218,7 @@
             // 
             // txtFacility
             // 
+            txtFacility.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtFacility.Location = new Point(154, 149);
             txtFacility.Name = "txtFacility";
             txtFacility.Size = new Size(100, 23);
@@ -218,6 +226,7 @@
             // 
             // txtZone
             // 
+            txtZone.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtZone.Location = new Point(154, 192);
             txtZone.Name = "txtZone";
             txtZone.Size = new Size(100, 23);
@@ -225,6 +234,7 @@
             // 
             // txtSubZone
             // 
+            txtSubZone.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             txtSubZone.Location = new Point(154, 234);
             txtSubZone.Name = "txtSubZone";
             txtSubZone.Size = new Size(100, 23);
@@ -232,7 +242,7 @@
             // 
             // label6
             // 
-            label6.AutoSize = true;
+            label6.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label6.BackColor = Color.Transparent;
             label6.Font = new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label6.ForeColor = SystemColors.ActiveCaptionText;
@@ -244,7 +254,7 @@
             // 
             // label7
             // 
-            label7.AutoSize = true;
+            label7.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label7.BackColor = Color.Transparent;
             label7.Font = new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label7.ForeColor = SystemColors.ActiveCaptionText;
@@ -256,7 +266,7 @@
             // 
             // label8
             // 
-            label8.AutoSize = true;
+            label8.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             label8.BackColor = Color.Transparent;
             label8.Font = new Font("Segoe UI", 8.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label8.ForeColor = SystemColors.ActiveCaptionText;
@@ -268,7 +278,7 @@
             // 
             // lblSelectedFile
             // 
-            lblSelectedFile.AutoSize = true;
+            lblSelectedFile.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             lblSelectedFile.BackColor = Color.Transparent;
             lblSelectedFile.ForeColor = SystemColors.ButtonShadow;
             lblSelectedFile.Location = new Point(26, 318);
@@ -279,6 +289,7 @@
             // 
             // btnBacktoDash
             // 
+            btnBacktoDash.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnBacktoDash.ForeColor = SystemColors.ActiveCaptionText;
             btnBacktoDash.Location = new Point(705, 415);
             btnBacktoDash.Name = "btnBacktoDash";
@@ -290,6 +301,7 @@
             // 
             // panel1
             // 
+            panel1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             panel1.BackColor = SystemColors.ControlLightLight;
             panel1.Controls.Add(btnRegister);
             panel1.Controls.Add(lblSelectedFile);
@@ -329,7 +341,6 @@
             Name = "IngestionForm";
             Text = "IngestionForm";
             panel1.ResumeLayout(false);
-            panel1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }

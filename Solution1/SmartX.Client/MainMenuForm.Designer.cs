@@ -32,12 +32,12 @@
             btnCommandStream = new Button();
             btnTopology = new Button();
             btnIngestion = new Button();
-            label1 = new Label();
             label2 = new Label();
             SuspendLayout();
             // 
             // btnCommandStream
             // 
+            btnCommandStream.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnCommandStream.BackColor = Color.Transparent;
             btnCommandStream.FlatStyle = FlatStyle.Flat;
             btnCommandStream.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
@@ -51,6 +51,7 @@
             // 
             // btnTopology
             // 
+            btnTopology.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnTopology.BackColor = Color.Transparent;
             btnTopology.FlatStyle = FlatStyle.Flat;
             btnTopology.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
@@ -64,6 +65,7 @@
             // 
             // btnIngestion
             // 
+            btnIngestion.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnIngestion.BackColor = Color.Transparent;
             btnIngestion.FlatStyle = FlatStyle.Flat;
             btnIngestion.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
@@ -75,16 +77,6 @@
             btnIngestion.Text = "Sensor Data Ingestion and Telemetry";
             btnIngestion.UseVisualStyleBackColor = false;
             btnIngestion.Click += btnIngestion_Click;
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.ForeColor = SystemColors.ControlDark;
-            label1.Location = new Point(359, 365);
-            label1.Name = "label1";
-            label1.Size = new Size(96, 15);
-            label1.TabIndex = 3;
-            label1.Text = "Coming in part 2";
             // 
             // label2
             // 
@@ -104,7 +96,6 @@
             BackgroundImageLayout = ImageLayout.Zoom;
             ClientSize = new Size(800, 450);
             Controls.Add(label2);
-            Controls.Add(label1);
             Controls.Add(btnIngestion);
             Controls.Add(btnTopology);
             Controls.Add(btnCommandStream);
@@ -119,7 +110,6 @@
         private Button btnCommandStream;
         private Button btnTopology;
         private Button btnIngestion;
-        private Label label1;
         private Label label2;
     }
 }
