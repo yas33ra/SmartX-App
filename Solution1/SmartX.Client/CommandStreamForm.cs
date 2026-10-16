@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SmartX.Client.Navigation;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,6 +14,11 @@ namespace SmartX.Client
         public CommandStreamForm()
         {
             InitializeComponent();
+        }
+
+        private void btnBackToMenu_Click(object sender, EventArgs e)
+        {
+            Navigator.NavigateTo(AppModule.MainMenu);
         }
     }
 }

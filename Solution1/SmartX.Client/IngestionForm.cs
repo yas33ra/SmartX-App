@@ -1,4 +1,5 @@
 ﻿using SmartX.Client.Models;
+using SmartX.Client.Navigation;
 using SmartX.Client.Services;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,13 @@ namespace SmartX.Client
         {
             InitializeComponent();
             cmbCategory.DataSource = Enum.GetValues(typeof(SensorCategory));
-            Load += async (s, e) => await RefreshSensorListAsync();
+            VisibleChanged += async (s, e) =>
+            {
+                if (Visible)
+                {
+                    await RefreshSensorListSafeAsync();
+                }
+            };
         }
 
         private async void btnRegister_Click(object sender, EventArgs e)
@@ -84,6 +91,18 @@ namespace SmartX.Client
             }
         }
 
+        private async Task RefreshSensorListSafeAsync()
+        {
+            try
+            {
+                await RefreshSensorListAsync();
+            }
+            catch (HttpRequestException)
+            {
+                MessageBox.Show("Could not reach the API. Is SmartX.API running?",
+                    "API unavailable", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
         private void cmbCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cmbCategory.SelectedItem is not SensorCategory selected)
@@ -118,9 +137,7 @@ namespace SmartX.Client
 
         private void btnBacktoDash_Click(object sender, EventArgs e)
         {
-            MainMenuForm mainMenu = new MainMenuForm();
-            mainMenu.Show();
-            this.Hide();
+            Navigator.NavigateTo(AppModule.MainMenu);
         }
     }
 }

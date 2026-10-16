@@ -28,13 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
+            btnBackToMenu = new Button();
             SuspendLayout();
+            // 
+            // btnBackToMenu
+            // 
+            btnBackToMenu.Location = new Point(125, 132);
+            btnBackToMenu.Name = "btnBackToMenu";
+            btnBackToMenu.Size = new Size(75, 23);
+            btnBackToMenu.TabIndex = 0;
+            btnBackToMenu.Text = "back";
+            btnBackToMenu.UseVisualStyleBackColor = true;
+            btnBackToMenu.Click += btnBackToMenu_Click;
             // 
             // CommandStreamForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(btnBackToMenu);
             Name = "CommandStreamForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Real-time Command Sream";
@@ -42,5 +54,7 @@
         }
 
         #endregion
+
+        private Button btnBackToMenu;
     }
 }
