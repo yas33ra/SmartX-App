@@ -1,4 +1,5 @@
 using SmartX.API.Endpoints;
+using SmartX.API.Models;
 using SmartX.API.Storage;
 
 namespace SmartX.API
@@ -17,9 +18,13 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<SensorRegistry>(); // one instance of SensorRegistry
 
+            builder.Services.AddSingleton<TelemetryStore>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
+
+            app.MapTelemetryEndpoints();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
@@ -30,25 +35,6 @@ namespace SmartX.API
             //app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
-            var summaries = new[]
-            {
-                "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-            };
-
-            app.MapGet("/weatherforecast", (HttpContext httpContext) =>
-            {
-                var forecast = Enumerable.Range(1, 5).Select(index =>
-                    new WeatherForecast
-                    {
-                        Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                        TemperatureC = Random.Shared.Next(-20, 55),
-                        Summary = summaries[Random.Shared.Next(summaries.Length)]
-                    })
-                    .ToArray();
-                return forecast;
-            })
-            .WithName("GetWeatherForecast");
 
             app.Run();
         }

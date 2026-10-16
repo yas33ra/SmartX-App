@@ -48,5 +48,11 @@ namespace SmartX.API.Storage
                 sensor.AttachedFilePath = filePath;
             }
         }
+    
+    //-----------------------------------------------------------------
+
+        //Check for duplicate MAC
+        public bool MacExists(string mac) =>
+    _sensors.Any(s => string.Equals(s.MacAddress, mac, StringComparison.OrdinalIgnoreCase));
     }
 }
