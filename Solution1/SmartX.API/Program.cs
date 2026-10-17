@@ -24,6 +24,8 @@ namespace SmartX.API
 
             builder.Services.AddHostedService<IngestionWorker>();
 
+            builder.Services.AddSingleton<AlertTracker>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
@@ -31,6 +33,8 @@ namespace SmartX.API
             app.MapTelemetryEndpoints();
 
             app.MapIngestionEndpoints();
+
+            app.MapAlertEndpoints();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

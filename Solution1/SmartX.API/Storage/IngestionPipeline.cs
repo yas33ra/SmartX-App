@@ -8,13 +8,18 @@ namespace SmartX.API.Storage
         private readonly PriorityQueue<IngestionItem, (int, long)> _critical = new();  // most severe first
         private readonly object _lock = new();
         private readonly TelemetryStore _store;
+        private readonly AlertTracker _alerts;
         private long _sequence;     // tie-breaker so equal severity stays first-come-first-served
         private long _processed;
 
         // When true the worker stops draining (used to demo the queues filling up)
         public volatile bool Paused;
 
-        public IngestionPipeline(TelemetryStore store) => _store = store;
+        public IngestionPipeline(TelemetryStore store, AlertTracker alerts)
+        {
+            _store = store;
+            _alerts = alerts;
+        }
 
         // Returns true if the item was critical
         public bool Enqueue(IngestionItem item)
@@ -45,6 +50,13 @@ namespace SmartX.API.Storage
             }
 
             Store(item);
+
+            if (CriticalRules.GetSeverity(item) > 0)
+            {
+                var kind = item.Category == SensorCategory.Electrical ? AlertKind.PowerSpike : AlertKind.ClimateExtreme;
+                _alerts.Raise(item.SensorId, kind);
+            }
+
             Interlocked.Increment(ref _processed);
             return item;
         }
