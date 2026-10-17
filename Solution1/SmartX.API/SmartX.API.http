@@ -1,39 +1,29 @@
-### H1 (sent first, but the LATEST time)
-POST http://localhost:5056/telemetry/electrical
+### C1. Turn Pump A ON (single device)
+POST http://localhost:5056/commands
 Content-Type: application/json
 
-{ "sensorId": "a9c7c8d8-d7d9-4fec-97b9-c6d1f27df047", "timeStamp": "2026-10-17T10:03:00Z", "value": { "watts": 300 } }
+{ "on": true, "sensorIds": ["PUMP-ID-HERE"] }
 
-### H2 (sent second, the EARLIEST time)
-POST http://localhost:5056/telemetry/electrical
+### C2. Turn ALL control devices OFF
+POST http://localhost:5056/commands
 Content-Type: application/json
 
-{ "sensorId": "a9c7c8d8-d7d9-4fec-97b9-c6d1f27df047", "timeStamp": "2026-10-17T10:01:00Z", "value": { "watts": 100 } }
+{ "on": false }
 
-### H3 (sent third, the MIDDLE time)
-POST http://localhost:5056/telemetry/electrical
+### C3. Current device states
+GET http://localhost:5056/commands/state
+
+### C4. Command history (top of stack first)
+GET http://localhost:5056/commands/history
+
+### C5. Undo the last command
+POST http://localhost:5056/commands/undo
+
+### C6. Bad request: an electrical sensor ID or a random GUID
+POST http://localhost:5056/commands
 Content-Type: application/json
 
-{ "sensorId": "a9c7c8d8-d7d9-4fec-97b9-c6d1f27df047", "timeStamp": "2026-10-17T10:02:00Z", "value": { "watts": 200 } }
+{ "on": true, "sensorIds": ["00000000-0000-0000-0000-000000000001"] }
 
-### Timeline, sorted by time
-GET http://localhost:5056/history/a9c7c8d8-d7d9-4fec-97b9-c6d1f27df047
-
-### Arrival order, for contrast
-GET http://localhost:5056/telemetry/electrical
-
-
-### T1. since: only readings at or after 10:02  (expect 200 and 300, count 2)
-GET http://localhost:5056/history/a9c7c8d8-d7d9-4fec-97b9-c6d1f27df047?since=2026-10-17T10:02:00Z
-
-### T2. until: only readings at or before 10:01:30  (expect only 100, count 1)
-GET http://localhost:5056/history/a9c7c8d8-d7d9-4fec-97b9-c6d1f27df047?until=2026-10-17T10:01:30Z
-
-### T3. limit: only the latest 1 reading  (expect only 300, count 1)
-GET http://localhost:5056/history/a9c7c8d8-d7d9-4fec-97b9-c6d1f27df047?limit=1
-
-### T4. window: since AND until together  (expect only 200, count 1)
-GET http://localhost:5056/history/a9c7c8d8-d7d9-4fec-97b9-c6d1f27df047?since=2026-10-17T10:01:30Z&until=2026-10-17T10:02:30Z
-
-### T5. unknown sensor  (expect 404 with "Sensor not found.")
-GET http://localhost:5056/history/00000000-0000-0000-0000-000000000001
+### C7. Control telemetry (all the state changes, including undos)
+GET http://localhost:5056/telemetry/control
