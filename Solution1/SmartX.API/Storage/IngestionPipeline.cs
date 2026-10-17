@@ -9,16 +9,18 @@ namespace SmartX.API.Storage
         private readonly object _lock = new();
         private readonly TelemetryStore _store;
         private readonly AlertTracker _alerts;
+        private readonly SensorHistory _history;
         private long _sequence;     // tie-breaker so equal severity stays first-come-first-served
         private long _processed;
 
         // When true the worker stops draining (used to demo the queues filling up)
         public volatile bool Paused;
 
-        public IngestionPipeline(TelemetryStore store, AlertTracker alerts)
+        public IngestionPipeline(TelemetryStore store, AlertTracker alerts, SensorHistory history)
         {
             _store = store;
             _alerts = alerts;
+            _history = history;
         }
 
         // Returns true if the item was critical
@@ -50,6 +52,8 @@ namespace SmartX.API.Storage
             }
 
             Store(item);
+
+            _history.Record(item.SensorId, item.TimeStamp, item.Value);
 
             if (CriticalRules.GetSeverity(item) > 0)
             {

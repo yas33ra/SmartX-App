@@ -26,6 +26,8 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<AlertTracker>();
 
+            builder.Services.AddSingleton<SensorHistory>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
@@ -35,6 +37,8 @@ namespace SmartX.API
             app.MapIngestionEndpoints();
 
             app.MapAlertEndpoints();
+
+            app.MapHistoryEndpoints();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
