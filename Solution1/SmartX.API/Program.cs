@@ -20,11 +20,17 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<TelemetryStore>();
 
+            builder.Services.AddSingleton<IngestionPipeline>();
+
+            builder.Services.AddHostedService<IngestionWorker>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
 
             app.MapTelemetryEndpoints();
+
+            app.MapIngestionEndpoints();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

@@ -5,12 +5,41 @@ Content-Type: application/json
 { "sensorId": "c095f308-6160-4637-a7bc-965f3c548b0b", "value": 23.5 }
 
 ###
-
+### Electrical 1: normal
 POST http://localhost:5056/telemetry/electrical
 Content-Type: application/json
 
-{ "sensorId": "c095f308-6160-4637-a7bc-965f3c548b0b", "value": { "watts": 1200 } }
+{ "sensorId": "dadef783-36e2-4628-880d-7e02c9bfe885", "value": { "watts": 100 } }
 
+### Electrical 2: normal
+POST http://localhost:5056/telemetry/electrical
+Content-Type: application/json
+
+{ "sensorId": "dadef783-36e2-4628-880d-7e02c9bfe885", "value": { "watts": 200 } }
+
+### Electrical 3: normal
+POST http://localhost:5056/telemetry/electrical
+Content-Type: application/json
+
+{ "sensorId": "dadef783-36e2-4628-880d-7e02c9bfe885", "value": { "watts": 300 } }
+
+### Electrical 4: SPIKE (critical, over 5000)
+POST http://localhost:5056/telemetry/electrical
+Content-Type: application/json
+
+{ "sensorId": "dadef783-36e2-4628-880d-7e02c9bfe885", "value": { "watts": 6000 } }
+
+### Ingestion status
+GET http://localhost:5056/ingestion/status
+
+### Pause
+POST http://localhost:5056/ingestion/pause
+
+### Resume
+POST http://localhost:5056/ingestion/resume
+
+### Read what reached the store
+GET http://localhost:5056/telemetry/electrical
 ###
 
 POST http://localhost:5056/telemetry/control
