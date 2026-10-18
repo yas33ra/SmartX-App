@@ -26,4 +26,10 @@ GET http://localhost:5056/devices
 POST http://localhost:5056/alerts/disconnect
 Content-Type: application/json
 
-{ "sensorId": "7a86eec7-e4e7-473a-88ee-bc9b8ca716be" }
+{ "sensorId": "155f258e-d52d-4c49-8938-5540dbcca402" }
+
+### H2 (sent second, the EARLIEST time)
+POST http://localhost:5056/telemetry/electrical
+Content-Type: application/json
+
+{ "sensorId": "b9fa0b31-619f-4385-b998-0972163f3a3f", "timeStamp": "2026-10-17T10:01:00Z", "value": { "watts": 6000 } }

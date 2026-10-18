@@ -44,11 +44,11 @@
             lstAlerts = new ListBox();
             lblHistory = new Label();
             lstHistory = new ListBox();
-            Name = new ColumnHeader();
-            Category = new ColumnHeader();
-            State = new ColumnHeader();
-            Alerts = new ColumnHeader();
-            MAC = new ColumnHeader();
+            colName = new ColumnHeader();
+            colCategory = new ColumnHeader();
+            colState = new ColumnHeader();
+            colAlerts = new ColumnHeader();
+            colMAC = new ColumnHeader();
             SuspendLayout();
             // 
             // btnBackToMenu
@@ -111,7 +111,7 @@
             // lvDevices
             // 
             lvDevices.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            lvDevices.Columns.AddRange(new ColumnHeader[] { Name, Category, State, Alerts, MAC });
+            lvDevices.Columns.AddRange(new ColumnHeader[] { colName, colCategory, colState, colAlerts, colMAC });
             lvDevices.FullRowSelect = true;
             lvDevices.GridLines = true;
             lvDevices.Location = new Point(22, 114);
@@ -211,28 +211,28 @@
             // 
             // Name
             // 
-            Name.Text = "Name";
-            Name.Width = 100;
+            colName.Text = "Name";
+            colName.Width = 100;
             // 
             // Category
             // 
-            Category.Text = "Category";
-            Category.Width = 80;
+            colCategory.Text = "Category";
+            colCategory.Width = 80;
             // 
             // State
             // 
-            State.Text = "State";
-            State.Width = 90;
+            colState.Text = "State";
+            colState.Width = 90;
             // 
             // Alerts
             // 
-            Alerts.Text = "Alerts";
-            Alerts.Width = 90;
+            colAlerts.Text = "Alerts";
+            colAlerts.Width = 90;
             // 
             // MAC
             // 
-            MAC.Text = "MAC Address";
-            MAC.Width = 110;
+            colMAC.Text = "MAC Address";
+            colMAC.Width = 110;
             // 
             // CommandStreamForm
             // 
@@ -280,10 +280,10 @@
         private ListBox lstAlerts;
         private Label lblHistory;
         private ListBox lstHistory;
-        private ColumnHeader Name;
-        private ColumnHeader Category;
-        private ColumnHeader State;
-        private ColumnHeader Alerts;
-        private ColumnHeader MAC;
+        private ColumnHeader colName;
+        private ColumnHeader colCategory;
+        private ColumnHeader colState;
+        private ColumnHeader colAlerts;
+        private ColumnHeader colMAC;
     }
 }
