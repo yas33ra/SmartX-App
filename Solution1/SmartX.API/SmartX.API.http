@@ -21,3 +21,9 @@ GET http://localhost:5056/devices?q=zzz
 
 ### List all devices
 GET http://localhost:5056/devices
+
+### Raise a disconnect alert on Pump A
+POST http://localhost:5056/alerts/disconnect
+Content-Type: application/json
+
+{ "sensorId": "7a86eec7-e4e7-473a-88ee-bc9b8ca716be" }
