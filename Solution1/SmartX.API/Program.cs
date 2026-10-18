@@ -44,6 +44,8 @@ namespace SmartX.API
 
             app.MapCommandEndpoints();
 
+            app.MapDeviceEndpoints();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

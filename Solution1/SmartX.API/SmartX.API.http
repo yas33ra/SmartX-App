@@ -1,29 +1,23 @@
-### C1. Turn Pump A ON (single device)
-POST http://localhost:5056/commands
-Content-Type: application/json
+### D1. Everything
+GET http://localhost:5056/devices
 
-{ "on": true, "sensorIds": ["PUMP-ID-HERE"] }
+### D2. Search by name (any case, partial)
+GET http://localhost:5056/devices?q=pump
 
-### C2. Turn ALL control devices OFF
-POST http://localhost:5056/commands
-Content-Type: application/json
+### D3. Filter by category
+GET http://localhost:5056/devices?category=Control
 
-{ "on": false }
+### D4. Only devices with active alerts
+GET http://localhost:5056/devices?hasAlerts=true
 
-### C3. Current device states
-GET http://localhost:5056/commands/state
+### D5. Only devices WITHOUT alerts
+GET http://localhost:5056/devices?hasAlerts=false
 
-### C4. Command history (top of stack first)
-GET http://localhost:5056/commands/history
+### D6. Filters combined
+GET http://localhost:5056/devices?category=Control&hasAlerts=true
 
-### C5. Undo the last command
-POST http://localhost:5056/commands/undo
+### D7. Search that matches nothing
+GET http://localhost:5056/devices?q=zzz
 
-### C6. Bad request: an electrical sensor ID or a random GUID
-POST http://localhost:5056/commands
-Content-Type: application/json
-
-{ "on": true, "sensorIds": ["00000000-0000-0000-0000-000000000001"] }
-
-### C7. Control telemetry (all the state changes, including undos)
-GET http://localhost:5056/telemetry/control
+### List all devices
+GET http://localhost:5056/devices
