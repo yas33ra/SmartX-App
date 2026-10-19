@@ -1,0 +1,13 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartx-api
+    ports:
+      - "5056:5056"
+    volumes:
+      - smartx-uploads:/app/Uploads
+
+volumes:
+  smartx-uploads:

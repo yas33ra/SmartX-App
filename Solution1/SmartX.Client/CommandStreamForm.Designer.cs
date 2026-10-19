@@ -74,9 +74,10 @@
             // 
             lblTitle.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Segoe UI", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
             lblTitle.Location = new Point(12, 34);
             lblTitle.Name = "lblTitle";
-            lblTitle.Size = new Size(167, 15);
+            lblTitle.Size = new Size(275, 25);
             lblTitle.TabIndex = 1;
             lblTitle.Text = "Real - Time Command Stream";
             // 
@@ -259,7 +260,7 @@
             // 
             // btnApplySuggestion
             // 
-            btnApplySuggestion.Location = new Point(262, 135);
+            btnApplySuggestion.Location = new Point(376, 135);
             btnApplySuggestion.Name = "btnApplySuggestion";
             btnApplySuggestion.Size = new Size(132, 23);
             btnApplySuggestion.TabIndex = 2;
@@ -268,9 +269,9 @@
             // 
             // lblSuggestionWhy
             // 
-            lblSuggestionWhy.Location = new Point(23, 149);
+            lblSuggestionWhy.Location = new Point(20, 139);
             lblSuggestionWhy.Name = "lblSuggestionWhy";
-            lblSuggestionWhy.Size = new Size(100, 23);
+            lblSuggestionWhy.Size = new Size(350, 23);
             lblSuggestionWhy.TabIndex = 1;
             // 
             // lstSuggestions
@@ -305,6 +306,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            BackgroundImage = Properties.Resources.commandbackground;
             ClientSize = new Size(984, 761);
             Controls.Add(gbInsights);
             Controls.Add(gbSuggestions);
