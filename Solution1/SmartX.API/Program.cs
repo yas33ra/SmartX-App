@@ -32,6 +32,8 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<PatternEngine>();
 
+            builder.Services.AddSingleton<InsightEngine>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();

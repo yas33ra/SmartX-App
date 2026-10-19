@@ -1,23 +1,21 @@
-### 1. Clear the alert (404 the first time is fine)
-DELETE http://localhost:5056/alerts/194a98e8-4faa-48fb-a5f1-e90510f57ca7/PowerSpike
+### I1. Nothing wrong yet
+GET http://localhost:5056/insights/devices
 
-### 2. Mains power spike (this raises a new PowerSpike alert; wait a second after sending)
+### I2. Near limit: 4200 W (the spike limit is 5000)
 POST http://localhost:5056/telemetry/electrical
 Content-Type: application/json
 
-{ "sensorId": "194a98e8-4faa-48fb-a5f1-e90510f57ca7", "value": { "watts": 6000 } }
+{ "sensorId": "009ed9ee-6799-4810-9434-ac2ba4476298", "value": { "watts": 4200 } }
 
-### 3. The user reacts: turn Pump A OFF
-POST http://localhost:5056/commands
+### I3. Unusual reading: 12 normal readings, then a jump to 30
+POST http://localhost:5056/telemetry/climate/batch
 Content-Type: application/json
 
-{ "on": false, "sensorIds": ["e2408b27-b9a0-4125-9a9b-437e9b06f9d9"] }
+{
+  "sensorId": "964766f5-3348-4e95-8c5e-762b793189f0",
+  "batches": [[22.0, 22.2, 21.9, 22.1, 22.3, 22.0, 21.8, 22.2, 22.1, 22.0, 21.9, 22.2], [30.0]],
+  "intervalSeconds": 1
+}
 
-### 4. Reset: turn Pump A back ON
-POST http://localhost:5056/commands
-Content-Type: application/json
-
-{ "on": true, "sensorIds": ["e2408b27-b9a0-4125-9a9b-437e9b06f9d9"] }
-
-### 5. Ask for suggestions
-GET http://localhost:5056/insights/suggestions
+### I4. Check the insights
+GET http://localhost:5056/insights/devices

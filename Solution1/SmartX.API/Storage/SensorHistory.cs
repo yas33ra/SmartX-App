@@ -59,5 +59,21 @@
                 return points.ToList();
             }
         }
+
+        // The most recent 'count' points, oldest first. Empty if the sensor has no readings.
+        public List<HistoryPoint> GetLatest(Guid sensorId, int count)
+        {
+            lock (_lock)
+            {
+                if (!_timelines.TryGetValue(sensorId, out var timeline))
+                {
+                    return new List<HistoryPoint>();
+                }
+
+                return timeline.TakeLast(count)
+                               .Select(p => new HistoryPoint(p.Key, p.Value))
+                               .ToList();
+            }
+        }
     }
 }

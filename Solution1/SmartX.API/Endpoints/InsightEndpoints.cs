@@ -46,6 +46,17 @@ namespace SmartX.API.Endpoints
 
                 return Results.Ok(suggestions);
             });
+
+            // Devices that look problematic right now
+            group.MapGet("/devices", (InsightEngine engine) =>
+                Results.Ok(engine.Analyse().Select(i => new
+                {
+                    sensorId = i.SensorId,
+                    sensorName = i.SensorName,
+                    rule = i.Rule,
+                    severity = i.Severity.ToString(),
+                    message = i.Message
+                })));
         }
 
         // Don't suggest "turn Pump A OFF" if Pump A is already off
