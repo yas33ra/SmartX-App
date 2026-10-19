@@ -35,7 +35,12 @@ namespace SmartX.Client
 
             // Filters
             txtSearch.TextChanged += (s, e) => { _searchTimer.Stop(); _searchTimer.Start(); };
-            _searchTimer.Tick += async (s, e) => { _searchTimer.Stop(); await RefreshAllSafeAsync(); };
+            _searchTimer.Tick += async (s, e) =>
+            {
+                _searchTimer.Stop();
+                await RecordSearchSafeAsync(txtSearch.Text);   // tell the engine the USER searched
+                await RefreshAllSafeAsync();
+            };
             cmbCategory.SelectedIndexChanged += async (s, e) => await RefreshAllSafeAsync();
             chkAlertsOnly.CheckedChanged += async (s, e) => await RefreshAllSafeAsync();
             btnRefresh.Click += async (s, e) => await RefreshAllSafeAsync();
@@ -45,6 +50,11 @@ namespace SmartX.Client
             btnTurnOff.Click += async (s, e) => await SendToSelectedAsync(on: false);
             btnAllOff.Click += async (s, e) => await ShutDownAllAsync();
             btnUndo.Click += async (s, e) => await UndoAsync();
+
+            // Suggestions
+            lstSuggestions.SelectedIndexChanged += (s, e) =>
+                lblSuggestionWhy.Text = (lstSuggestions.SelectedItem as SuggestionInfo)?.Evidence ?? "";
+            btnApplySuggestion.Click += async (s, e) => await ApplySuggestionAsync();
 
             FormClosed += (s, e) => { _refreshTimer.Dispose(); _searchTimer.Dispose(); };
         }
@@ -78,15 +88,19 @@ namespace SmartX.Client
                 string? category = cmbCategory.SelectedIndex <= 0 ? null : cmbCategory.Text;
                 bool? hasAlerts = chkAlertsOnly.Checked ? true : null;
 
-                // Ask for all three at once
+                // Ask for everything at once
                 var devicesTask = _apiClient.GetDevicesAsync(txtSearch.Text, category, hasAlerts);
                 var alertsTask = _apiClient.GetAlertsAsync();
                 var historyTask = _apiClient.GetCommandHistoryAsync();
-                await Task.WhenAll(devicesTask, alertsTask, historyTask);
+                var suggestionsTask = _apiClient.GetSuggestionsAsync();
+                var insightsTask = _apiClient.GetDeviceInsightsAsync();
+                await Task.WhenAll(devicesTask, alertsTask, historyTask, suggestionsTask, insightsTask);
 
                 ShowDevices(devicesTask.Result);
                 ShowAlerts(alertsTask.Result);
                 ShowHistory(historyTask.Result);
+                ShowSuggestions(suggestionsTask.Result);
+                ShowInsights(insightsTask.Result);
             }
             catch (HttpRequestException)
             {
@@ -157,6 +171,47 @@ namespace SmartX.Client
             lstHistory.EndUpdate();
         }
 
+        private void ShowSuggestions(List<SuggestionInfo> suggestions)
+        {
+            // Remember the selection so the 3-second refresh doesn't deselect while the user reads
+            var selectedText = (lstSuggestions.SelectedItem as SuggestionInfo)?.Text;
+
+            lstSuggestions.BeginUpdate();
+            lstSuggestions.Items.Clear();
+            foreach (var s in suggestions)
+            {
+                lstSuggestions.Items.Add(s);
+            }
+            lstSuggestions.EndUpdate();
+
+            gbSuggestions.Text = $"Suggested Actions ({suggestions.Count})";
+
+            int match = suggestions.FindIndex(s => s.Text == selectedText);
+            if (match >= 0)
+            {
+                lstSuggestions.SelectedIndex = match;     // also refreshes the "why" text
+            }
+            else
+            {
+                lblSuggestionWhy.Text = suggestions.Count == 0
+                    ? "No suggestions yet. They appear as the system learns your habits."
+                    : "Select a suggestion to see why it was made.";
+            }
+        }
+
+        private void ShowInsights(List<InsightInfo> insights)
+        {
+            gbInsights.Text = $"Automated Insights ({insights.Count})";
+
+            lstInsights.BeginUpdate();
+            lstInsights.Items.Clear();
+            foreach (var i in insights)
+            {
+                lstInsights.Items.Add(i);
+            }
+            lstInsights.EndUpdate();
+        }
+
         //-----------------------------------------------------------------
         // Commands
 
@@ -198,6 +253,45 @@ namespace SmartX.Client
                 var undone = await _apiClient.UndoLastCommandAsync();
                 return $"Undid: {undone?.Description}";
             });
+        }
+
+        private async Task ApplySuggestionAsync()
+        {
+            if (lstSuggestions.SelectedItem is not SuggestionInfo suggestion)
+            {
+                ShowStatus("Select a suggestion first.", isError: true);
+                return;
+            }
+
+            if (suggestion.Kind == "Search")
+            {
+                txtSearch.Text = suggestion.SearchTerm ?? "";     // the normal search flow takes over
+                ShowStatus($"Searching for \"{suggestion.SearchTerm}\"", isError: false);
+                return;
+            }
+
+            if (suggestion.On is null || suggestion.SensorIds is null) return;
+
+            await RunCommandAsync(async () =>
+            {
+                var command = await _apiClient.IssueCommandAsync(suggestion.On.Value, suggestion.SensorIds);
+                return $"Applied suggestion: {command.Description}";
+            });
+        }
+
+        // Learning is best-effort: if it fails, searching must still work
+        private async Task RecordSearchSafeAsync(string term)
+        {
+            if (term.Trim().Length < 3) return;       // ignore half-typed words
+
+            try
+            {
+                await _apiClient.RecordSearchAsync(term);
+            }
+            catch
+            {
+                // deliberately ignored
+            }
         }
 
         // Runs a command, shows the result (or the error), then refreshes the screen

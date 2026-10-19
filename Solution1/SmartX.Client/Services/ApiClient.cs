@@ -101,6 +101,23 @@ namespace SmartX.Client.Services
             var result = await response.Content.ReadFromJsonAsync<UndoResponse>();
             return result?.Command;
         }
+
+        public async Task<List<SuggestionInfo>> GetSuggestionsAsync()
+        {
+            return await _http.GetFromJsonAsync<List<SuggestionInfo>>("/insights/suggestions") ?? new List<SuggestionInfo>();
+        }
+
+        public async Task<List<InsightInfo>> GetDeviceInsightsAsync()
+        {
+            return await _http.GetFromJsonAsync<List<InsightInfo>>("/insights/devices") ?? new List<InsightInfo>();
+        }
+
+        // Tells the engine the USER searched for something (so it can learn the pattern)
+        public async Task RecordSearchAsync(string term)
+        {
+            var response = await _http.PostAsJsonAsync("/insights/search", new SearchEventRequest(term));
+            response.EnsureSuccessStatusCode();
+        }
     }
 
 

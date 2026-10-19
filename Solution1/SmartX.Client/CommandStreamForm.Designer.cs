@@ -35,6 +35,11 @@
             chkAlertsOnly = new CheckBox();
             btnRefresh = new Button();
             lvDevices = new ListView();
+            colName = new ColumnHeader();
+            colCategory = new ColumnHeader();
+            colState = new ColumnHeader();
+            colAlerts = new ColumnHeader();
+            colMAC = new ColumnHeader();
             btnTurnOn = new Button();
             btnTurnOff = new Button();
             btnAllOff = new Button();
@@ -44,11 +49,14 @@
             lstAlerts = new ListBox();
             lblHistory = new Label();
             lstHistory = new ListBox();
-            colName = new ColumnHeader();
-            colCategory = new ColumnHeader();
-            colState = new ColumnHeader();
-            colAlerts = new ColumnHeader();
-            colMAC = new ColumnHeader();
+            gbSuggestions = new GroupBox();
+            btnApplySuggestion = new Button();
+            lblSuggestionWhy = new Label();
+            lstSuggestions = new ListBox();
+            gbInsights = new GroupBox();
+            lstInsights = new ListBox();
+            gbSuggestions.SuspendLayout();
+            gbInsights.SuspendLayout();
             SuspendLayout();
             // 
             // btnBackToMenu
@@ -56,7 +64,7 @@
             btnBackToMenu.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             btnBackToMenu.Location = new Point(688, 30);
             btnBackToMenu.Name = "btnBackToMenu";
-            btnBackToMenu.Size = new Size(100, 23);
+            btnBackToMenu.Size = new Size(284, 23);
             btnBackToMenu.TabIndex = 0;
             btnBackToMenu.Text = "Back to Menu";
             btnBackToMenu.UseVisualStyleBackColor = true;
@@ -116,15 +124,40 @@
             lvDevices.GridLines = true;
             lvDevices.Location = new Point(22, 114);
             lvDevices.Name = "lvDevices";
-            lvDevices.Size = new Size(475, 245);
+            lvDevices.Size = new Size(659, 368);
             lvDevices.TabIndex = 6;
             lvDevices.UseCompatibleStateImageBehavior = false;
             lvDevices.View = View.Details;
             // 
+            // colName
+            // 
+            colName.Text = "Name";
+            colName.Width = 100;
+            // 
+            // colCategory
+            // 
+            colCategory.Text = "Category";
+            colCategory.Width = 80;
+            // 
+            // colState
+            // 
+            colState.Text = "State";
+            colState.Width = 90;
+            // 
+            // colAlerts
+            // 
+            colAlerts.Text = "Alerts";
+            colAlerts.Width = 90;
+            // 
+            // colMAC
+            // 
+            colMAC.Text = "MAC Address";
+            colMAC.Width = 110;
+            // 
             // btnTurnOn
             // 
             btnTurnOn.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnTurnOn.Location = new Point(25, 375);
+            btnTurnOn.Location = new Point(22, 497);
             btnTurnOn.Name = "btnTurnOn";
             btnTurnOn.Size = new Size(75, 23);
             btnTurnOn.TabIndex = 7;
@@ -134,7 +167,7 @@
             // btnTurnOff
             // 
             btnTurnOff.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnTurnOff.Location = new Point(104, 375);
+            btnTurnOff.Location = new Point(104, 497);
             btnTurnOff.Name = "btnTurnOff";
             btnTurnOff.Size = new Size(75, 23);
             btnTurnOff.TabIndex = 8;
@@ -144,7 +177,7 @@
             // btnAllOff
             // 
             btnAllOff.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnAllOff.Location = new Point(185, 375);
+            btnAllOff.Location = new Point(185, 497);
             btnAllOff.Name = "btnAllOff";
             btnAllOff.Size = new Size(75, 23);
             btnAllOff.TabIndex = 9;
@@ -154,7 +187,7 @@
             // btnUndo
             // 
             btnUndo.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnUndo.Location = new Point(266, 375);
+            btnUndo.Location = new Point(275, 497);
             btnUndo.Name = "btnUndo";
             btnUndo.Size = new Size(75, 23);
             btnUndo.TabIndex = 10;
@@ -165,7 +198,7 @@
             // 
             lblStatus.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             lblStatus.AutoSize = true;
-            lblStatus.Location = new Point(25, 413);
+            lblStatus.Location = new Point(22, 537);
             lblStatus.Name = "lblStatus";
             lblStatus.Size = new Size(39, 15);
             lblStatus.TabIndex = 11;
@@ -173,9 +206,10 @@
             // 
             // lblAlerts
             // 
+            lblAlerts.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             lblAlerts.AutoSize = true;
             lblAlerts.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblAlerts.Location = new Point(508, 126);
+            lblAlerts.Location = new Point(703, 114);
             lblAlerts.Name = "lblAlerts";
             lblAlerts.Size = new Size(79, 15);
             lblAlerts.TabIndex = 12;
@@ -185,16 +219,17 @@
             // 
             lstAlerts.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lstAlerts.FormattingEnabled = true;
-            lstAlerts.Location = new Point(508, 144);
+            lstAlerts.Location = new Point(692, 129);
             lstAlerts.Name = "lstAlerts";
-            lstAlerts.Size = new Size(280, 94);
+            lstAlerts.Size = new Size(280, 154);
             lstAlerts.TabIndex = 13;
             // 
             // lblHistory
             // 
+            lblHistory.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             lblHistory.AutoSize = true;
             lblHistory.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblHistory.Location = new Point(508, 269);
+            lblHistory.Location = new Point(703, 310);
             lblHistory.Name = "lblHistory";
             lblHistory.Size = new Size(184, 15);
             lblHistory.TabIndex = 14;
@@ -204,41 +239,75 @@
             // 
             lstHistory.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             lstHistory.FormattingEnabled = true;
-            lstHistory.Location = new Point(508, 287);
+            lstHistory.Location = new Point(692, 328);
             lstHistory.Name = "lstHistory";
-            lstHistory.Size = new Size(280, 94);
+            lstHistory.Size = new Size(280, 154);
             lstHistory.TabIndex = 15;
             // 
-            // Name
+            // gbSuggestions
             // 
-            colName.Text = "Name";
-            colName.Width = 100;
+            gbSuggestions.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            gbSuggestions.Controls.Add(btnApplySuggestion);
+            gbSuggestions.Controls.Add(lblSuggestionWhy);
+            gbSuggestions.Controls.Add(lstSuggestions);
+            gbSuggestions.Location = new Point(22, 573);
+            gbSuggestions.Name = "gbSuggestions";
+            gbSuggestions.Size = new Size(538, 172);
+            gbSuggestions.TabIndex = 16;
+            gbSuggestions.TabStop = false;
+            gbSuggestions.Text = "Suggested Actions";
             // 
-            // Category
+            // btnApplySuggestion
             // 
-            colCategory.Text = "Category";
-            colCategory.Width = 80;
+            btnApplySuggestion.Location = new Point(262, 135);
+            btnApplySuggestion.Name = "btnApplySuggestion";
+            btnApplySuggestion.Size = new Size(132, 23);
+            btnApplySuggestion.TabIndex = 2;
+            btnApplySuggestion.Text = "Apply Selected";
+            btnApplySuggestion.UseVisualStyleBackColor = true;
             // 
-            // State
+            // lblSuggestionWhy
             // 
-            colState.Text = "State";
-            colState.Width = 90;
+            lblSuggestionWhy.Location = new Point(23, 149);
+            lblSuggestionWhy.Name = "lblSuggestionWhy";
+            lblSuggestionWhy.Size = new Size(100, 23);
+            lblSuggestionWhy.TabIndex = 1;
             // 
-            // Alerts
+            // lstSuggestions
             // 
-            colAlerts.Text = "Alerts";
-            colAlerts.Width = 90;
+            lstSuggestions.FormattingEnabled = true;
+            lstSuggestions.Location = new Point(20, 35);
+            lstSuggestions.Name = "lstSuggestions";
+            lstSuggestions.Size = new Size(488, 94);
+            lstSuggestions.TabIndex = 0;
             // 
-            // MAC
+            // gbInsights
             // 
-            colMAC.Text = "MAC Address";
-            colMAC.Width = 110;
+            gbInsights.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            gbInsights.Controls.Add(lstInsights);
+            gbInsights.Location = new Point(620, 513);
+            gbInsights.Name = "gbInsights";
+            gbInsights.Size = new Size(352, 222);
+            gbInsights.TabIndex = 17;
+            gbInsights.TabStop = false;
+            gbInsights.Text = "Automated Insights";
+            // 
+            // lstInsights
+            // 
+            lstInsights.FormattingEnabled = true;
+            lstInsights.HorizontalScrollbar = true;
+            lstInsights.Location = new Point(6, 24);
+            lstInsights.Name = "lstInsights";
+            lstInsights.Size = new Size(323, 184);
+            lstInsights.TabIndex = 0;
             // 
             // CommandStreamForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(984, 761);
+            Controls.Add(gbInsights);
+            Controls.Add(gbSuggestions);
             Controls.Add(lstHistory);
             Controls.Add(lblHistory);
             Controls.Add(lstAlerts);
@@ -258,6 +327,8 @@
             Name = "CommandStreamForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Real-time Command Sream";
+            gbSuggestions.ResumeLayout(false);
+            gbInsights.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -285,5 +356,11 @@
         private ColumnHeader colState;
         private ColumnHeader colAlerts;
         private ColumnHeader colMAC;
+        private GroupBox gbSuggestions;
+        private Button btnApplySuggestion;
+        private Label lblSuggestionWhy;
+        private ListBox lstSuggestions;
+        private GroupBox gbInsights;
+        private ListBox lstInsights;
     }
 }
