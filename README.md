@@ -2,7 +2,7 @@
 
 **Name:** Yaseera  **Student number:** st10456786
 **Module:** PROG7312 – Part 2
-**Demo video:** [YouTube link]
+**Demo video:** [https://youtu.be/KpA9nhaarZs]
 
 Smart-X is a small system that manages IoT devices (sensors and switches).
 It has two programs:
@@ -135,4 +135,4 @@ The file `SmartX.API.http` has ready-made requests to test these in Visual Studi
 - Part 1 (registering devices and uploading files) still works from the main menu.
 
 ## GitHub
-[Repository link]
+[https://github.com/yas33ra/SmartX-App.git]
