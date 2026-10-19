@@ -8,14 +8,20 @@ namespace SmartX.API.Storage
         private readonly HashSet<AlertKey> _active = new();
         private readonly object _lock = new();
         private long _duplicatesSuppressed;
+        private readonly PatternEngine _patterns;
 
-        // Returns true if this is a NEW alert, false if it was already active
+        public AlertTracker(PatternEngine patterns) => _patterns = patterns;
+
         public bool Raise(Guid sensorId, AlertKind kind)
         {
             lock (_lock)
             {
                 bool isNew = _active.Add(new AlertKey(sensorId, kind));
-                if (!isNew)
+                if (isNew)
+                {
+                    _patterns.RecordTrigger($"alert:{sensorId}:{kind}");   // NEW alerts only, never duplicates
+                }
+                else
                 {
                     _duplicatesSuppressed++;
                 }

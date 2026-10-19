@@ -30,6 +30,8 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<CommandService>();
 
+            builder.Services.AddSingleton<PatternEngine>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
@@ -45,6 +47,8 @@ namespace SmartX.API
             app.MapCommandEndpoints();
 
             app.MapDeviceEndpoints();
+
+            app.MapInsightEndpoints();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

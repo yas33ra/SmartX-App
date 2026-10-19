@@ -1,35 +1,23 @@
-### D1. Everything
-GET http://localhost:5056/devices
+### 1. Clear the alert (404 the first time is fine)
+DELETE http://localhost:5056/alerts/194a98e8-4faa-48fb-a5f1-e90510f57ca7/PowerSpike
 
-### D2. Search by name (any case, partial)
-GET http://localhost:5056/devices?q=pump
-
-### D3. Filter by category
-GET http://localhost:5056/devices?category=Control
-
-### D4. Only devices with active alerts
-GET http://localhost:5056/devices?hasAlerts=true
-
-### D5. Only devices WITHOUT alerts
-GET http://localhost:5056/devices?hasAlerts=false
-
-### D6. Filters combined
-GET http://localhost:5056/devices?category=Control&hasAlerts=true
-
-### D7. Search that matches nothing
-GET http://localhost:5056/devices?q=zzz
-
-### List all devices
-GET http://localhost:5056/devices
-
-### Raise a disconnect alert on Pump A
-POST http://localhost:5056/alerts/disconnect
-Content-Type: application/json
-
-{ "sensorId": "155f258e-d52d-4c49-8938-5540dbcca402" }
-
-### H2 (sent second, the EARLIEST time)
+### 2. Mains power spike (this raises a new PowerSpike alert; wait a second after sending)
 POST http://localhost:5056/telemetry/electrical
 Content-Type: application/json
 
-{ "sensorId": "b9fa0b31-619f-4385-b998-0972163f3a3f", "timeStamp": "2026-10-17T10:01:00Z", "value": { "watts": 6000 } }
+{ "sensorId": "194a98e8-4faa-48fb-a5f1-e90510f57ca7", "value": { "watts": 6000 } }
+
+### 3. The user reacts: turn Pump A OFF
+POST http://localhost:5056/commands
+Content-Type: application/json
+
+{ "on": false, "sensorIds": ["e2408b27-b9a0-4125-9a9b-437e9b06f9d9"] }
+
+### 4. Reset: turn Pump A back ON
+POST http://localhost:5056/commands
+Content-Type: application/json
+
+{ "on": true, "sensorIds": ["e2408b27-b9a0-4125-9a9b-437e9b06f9d9"] }
+
+### 5. Ask for suggestions
+GET http://localhost:5056/insights/suggestions

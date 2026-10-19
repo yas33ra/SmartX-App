@@ -15,7 +15,13 @@ namespace SmartX.API.Storage
         private readonly object _lock = new();
         private readonly IngestionPipeline _pipeline;
 
-        public CommandService(IngestionPipeline pipeline) => _pipeline = pipeline;
+        private readonly PatternEngine _patterns;
+
+        public CommandService(IngestionPipeline pipeline, PatternEngine patterns)
+        {
+            _pipeline = pipeline;
+            _patterns = patterns;
+        }
 
         public OverrideCommand Issue(bool on, List<Guid> sensorIds, string description)
         {
@@ -31,6 +37,9 @@ namespace SmartX.API.Storage
 
                 var command = new OverrideCommand(Guid.NewGuid(), description, DateTime.UtcNow, changes);
                 _undoStack.Push(command);
+
+                var key = $"cmd:{(on ? "ON" : "OFF")}:{string.Join(",", sensorIds.OrderBy(id => id))}";
+                _patterns.RecordAction(new ActionEvent(key, ActionType.Command, description, On: on, SensorIds: sensorIds.ToList()));
 
                 foreach (var change in changes)
                 {
