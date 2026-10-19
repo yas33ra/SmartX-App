@@ -48,6 +48,7 @@
             btnCommandStream.TabIndex = 0;
             btnCommandStream.Text = "Real-Time Command Stream and History";
             btnCommandStream.UseVisualStyleBackColor = false;
+            btnCommandStream.Click += btnCommandStream_Click;
             // 
             // btnTopology
             // 

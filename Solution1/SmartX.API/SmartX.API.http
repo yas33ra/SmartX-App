@@ -1,26 +1,141 @@
+@host = http://localhost:5056
+# Get these from GET /sensors (step 1 below), then paste them here:
+@sensorId = PASTE-A-SENSOR-ID-HERE
+@pumpId = PASTE-A-CONTROL-DEVICE-ID-HERE
 
-POST http://localhost:5056/telemetry/climate
+### 1. List all sensors (copy ids from here)
+GET {{host}}/sensors
+
+### 2. Register a sensor (category: 0 = Climate, 1 = Electrical, 2 = Control)
+POST {{host}}/sensors
 Content-Type: application/json
 
-{ "sensorId": "c095f308-6160-4637-a7bc-965f3c548b0b", "value": 23.5 }
+{
+  "name": "Test Meter",
+  "macAddress": "AA:BB:CC:00:00:99",
+  "facility": "Main Campus",
+  "zone": "Greenhouse 1",
+  "subZone": "Bench A",
+  "category": 1
+}
 
-###
-
-POST http://localhost:5056/telemetry/electrical
+### 3. Register the SAME MAC again -> should be refused (Dictionary test)
+POST {{host}}/sensors
 Content-Type: application/json
 
-{ "sensorId": "c095f308-6160-4637-a7bc-965f3c548b0b", "value": { "watts": 1200 } }
+{
+  "name": "Duplicate Meter",
+  "macAddress": "aa-bb-cc-00-00-99",
+  "facility": "Main Campus",
+  "zone": "Greenhouse 1",
+  "subZone": "Bench A",
+  "category": 1
+}
 
-###
+### 4. Devices with state and alert counts
+GET {{host}}/devices
 
-POST http://localhost:5056/telemetry/control
+### 5. Search devices by name
+GET {{host}}/devices?q=pump
+
+### 6. Only devices with alerts
+GET {{host}}/devices?hasAlerts=true
+
+### 7. Filter by category (Climate / Electrical / Control)
+GET {{host}}/devices?category=Control
+
+### 8. Queue status
+GET {{host}}/ingestion/status
+
+### 9. Pause processing (queues will fill up)
+POST {{host}}/ingestion/pause
+
+### 10. Resume processing
+POST {{host}}/ingestion/resume
+
+### 11. Normal electrical reading (goes to the Queue)
+POST {{host}}/telemetry/electrical
 Content-Type: application/json
 
-{ "sensorId": "51e58b09-ac13-439f-a75f-a24e353e3cab", "value": true }
+{
+  "sensorId": "{{sensorId}}",
+  "value": { "watts": 300 }
+}
 
-###
-
-POST http://localhost:5056/telemetry/climate/batch
+### 12. Critical electrical reading (goes to the PriorityQueue)
+POST {{host}}/telemetry/electrical
 Content-Type: application/json
 
-{ "sensorId": "68b4f3d0-b1f9-44be-9917-6e1b56b55ac1", "batches": [[21.5], null, [22.0], [22.4], [22.9, 23.1, 23.3, 23.0]], "intervalSeconds": 30 }
+{
+  "sensorId": "{{sensorId}}",
+  "value": { "watts": 6000 }
+}
+
+### 13. Active alerts
+GET {{host}}/alerts
+
+### 14. Raise a disconnect alert (send twice: second time is a duplicate)
+POST {{host}}/alerts/disconnect
+Content-Type: application/json
+
+{
+  "sensorId": "{{sensorId}}"
+}
+
+### 15. Clear an alert (kinds: Disconnected, PowerSpike, ClimateExtreme)
+DELETE {{host}}/alerts/{{sensorId}}/Disconnected
+
+### 16. Sensor history, sorted by time (SortedDictionary)
+GET {{host}}/history/{{sensorId}}
+
+### 17. History with a time range and limit (use Z for UTC)
+GET {{host}}/history/{{sensorId}}?since=2026-10-19T00:00:00Z&until=2026-10-20T00:00:00Z&limit=10
+
+### 18. Turn a device ON
+POST {{host}}/commands
+Content-Type: application/json
+
+{
+  "on": true,
+  "sensorIds": ["{{pumpId}}"]
+}
+
+### 19. Turn a device OFF
+POST {{host}}/commands
+Content-Type: application/json
+
+{
+  "on": false,
+  "sensorIds": ["{{pumpId}}"]
+}
+
+### 20. Turn ALL control devices OFF (empty list = all)
+POST {{host}}/commands
+Content-Type: application/json
+
+{
+  "on": false
+}
+
+### 21. Undo the last command (Stack)
+POST {{host}}/commands/undo
+
+### 22. Command history
+GET {{host}}/commands/history
+
+### 23. Current on/off state of control devices
+GET {{host}}/commands/state
+
+### 24. Record a search (feeds the suggestion engine)
+POST {{host}}/insights/search
+Content-Type: application/json
+
+{
+  "term": "pump"
+}
+
+### 25. Suggested actions
+GET {{host}}/insights/suggestions
+
+### 26. Automated insights (silent, near limit, unusual reading)
+GET {{host}}/insights/devices

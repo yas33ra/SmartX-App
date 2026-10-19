@@ -1,3 +1,5 @@
+using SmartX.Client.Navigation;
+
 namespace SmartX.Client
 {
     public partial class MainMenuForm : Form
@@ -9,9 +11,12 @@ namespace SmartX.Client
 
         private void btnIngestion_Click(object sender, EventArgs e)
         {
-            IngestionForm ingestionForm = new IngestionForm();
-            ingestionForm.Show();
-            this.Hide();
+            Navigator.NavigateTo(AppModule.Ingestion);
+        }
+
+        private void btnCommandStream_Click(object sender, EventArgs e)
+        {
+            Navigator.NavigateTo(AppModule.CommandStream);
         }
     }
 }

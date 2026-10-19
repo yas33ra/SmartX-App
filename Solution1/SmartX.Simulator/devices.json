@@ -1,0 +1,42 @@
+{
+  "template": {
+    "name": "template",
+    "macAddress": "00:00:00:00:00:00",
+    "facility": "Main Campus",
+    "zone": "Greenhouse 1",
+    "subZone": "Bench A",
+    "category": 0
+  },
+  "devices": [
+    {
+      "name": "Greenhouse Temp",
+      "macAddress": "AA:BB:CC:00:00:01",
+      "category": 0,
+      "simKind": "climate"
+    },
+    {
+      "name": "Cold Room",
+      "macAddress": "AA:BB:CC:00:00:02",
+      "category": 0,
+      "simKind": "climate"
+    },
+    {
+      "name": "Mains Meter",
+      "macAddress": "AA:BB:CC:00:00:03",
+      "category": 1,
+      "simKind": "electrical"
+    },
+    {
+      "name": "Pump A",
+      "macAddress": "AA:BB:CC:00:00:04",
+      "category": 2,
+      "simKind": "control"
+    },
+    {
+      "name": "Valve B",
+      "macAddress": "AA:BB:CC:00:00:05",
+      "category": 2,
+      "simKind": "control"
+    }
+  ]
+}

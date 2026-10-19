@@ -55,6 +55,69 @@ namespace SmartX.Client.Services
                 throw new InvalidOperationException(message);
             }
         }
+
+
+        // Devices, with optional search / category / alerts-only filters
+        public async Task<List<DeviceInfo>> GetDevicesAsync(string? search, string? category, bool? hasAlerts)
+        {
+            var query = new List<string>();
+            if (!string.IsNullOrWhiteSpace(search))
+                query.Add($"q={Uri.EscapeDataString(search.Trim())}");
+            if (!string.IsNullOrWhiteSpace(category))
+                query.Add($"category={Uri.EscapeDataString(category)}");
+            if (hasAlerts is not null)
+                query.Add($"hasAlerts={hasAlerts.Value.ToString().ToLowerInvariant()}");
+
+            string url = "/devices" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+            return await _http.GetFromJsonAsync<List<DeviceInfo>>(url) ?? new List<DeviceInfo>();
+        }
+
+        public async Task<AlertsResponse> GetAlertsAsync()
+        {
+            return await _http.GetFromJsonAsync<AlertsResponse>("/alerts") ?? new AlertsResponse();
+        }
+
+        // Newest command first (the API reads the stack from the top)
+        public async Task<List<CommandInfo>> GetCommandHistoryAsync()
+        {
+            return await _http.GetFromJsonAsync<List<CommandInfo>>("/commands/history") ?? new List<CommandInfo>();
+        }
+
+        // sensorIds = null means "every control device"
+        public async Task<CommandInfo> IssueCommandAsync(bool on, List<Guid>? sensorIds)
+        {
+            var response = await _http.PostAsJsonAsync("/commands", new IssueCommandRequest(on, sensorIds));
+            await ThrowIfValidationErrorAsync(response);
+            response.EnsureSuccessStatusCode();
+            return (await response.Content.ReadFromJsonAsync<CommandInfo>())!;
+        }
+
+        // Reverts the most recent command; the API answers 400 "Nothing to undo." if the stack is empty
+        public async Task<CommandInfo?> UndoLastCommandAsync()
+        {
+            var response = await _http.PostAsync("/commands/undo", null);
+            await ThrowIfValidationErrorAsync(response);
+            response.EnsureSuccessStatusCode();
+            var result = await response.Content.ReadFromJsonAsync<UndoResponse>();
+            return result?.Command;
+        }
+
+        public async Task<List<SuggestionInfo>> GetSuggestionsAsync()
+        {
+            return await _http.GetFromJsonAsync<List<SuggestionInfo>>("/insights/suggestions") ?? new List<SuggestionInfo>();
+        }
+
+        public async Task<List<InsightInfo>> GetDeviceInsightsAsync()
+        {
+            return await _http.GetFromJsonAsync<List<InsightInfo>>("/insights/devices") ?? new List<InsightInfo>();
+        }
+
+        // Tells the engine the USER searched for something (so it can learn the pattern)
+        public async Task RecordSearchAsync(string term)
+        {
+            var response = await _http.PostAsJsonAsync("/insights/search", new SearchEventRequest(term));
+            response.EnsureSuccessStatusCode();
+        }
     }
 
 

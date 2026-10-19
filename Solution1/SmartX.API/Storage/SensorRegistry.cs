@@ -1,16 +1,29 @@
-﻿// This class holds the List<Sensor> in memory 
-// This class will also how senors are added and how we find sensors
+﻿// This class holds the sensors in memory using two Dictionaries:
+//   _byMac keyed by MAC address (how a device identifies itself)
+//   _byId  keyed by Guid        (what telemetry packets carry)
+// Both give O(1) lookups instead of scanning a List
 using SmartX.API.Models;
 
 namespace SmartX.API.Storage
 {
     public class SensorRegistry
     {
-        private readonly List<Sensor> _sensors = new(); // List (This will be changed to a dictionary in part 2)
+        private readonly Dictionary<string, Sensor> _byMac = new();
+        private readonly Dictionary<Guid, Sensor> _byId = new();
 
-    //-----------------------------------------------------------------
+        // The API handles several requests at once, so we lock while touching the dictionaries
+        private readonly object _lock = new();
 
-        public Sensor Add(Sensor sensor) //Add sensors to the list 
+        //-----------------------------------------------------------------
+
+        // "aa-bb-cc-dd-ee-ff" and "AA:BB:CC:DD:EE:FF" are the same device,
+        // so every MAC is converted to one standard form before it is used as a key
+        public static string NormalizeMac(string mac) =>
+            mac.Trim().ToUpperInvariant().Replace('-', ':');
+
+        //-----------------------------------------------------------------
+
+        public Sensor Add(Sensor sensor) // Add a sensor to both dictionaries
         {
             var hierarchy = sensor.BuildDeploymentHierarchy();
 
@@ -19,40 +32,74 @@ namespace SmartX.API.Storage
                 throw new InvalidOperationException("Sensor deployment hierarchy is invalid or incomplete.");
             }
 
-            _sensors.Add(sensor);
-            return sensor;
-        }
+            var key = NormalizeMac(sensor.MacAddress);
 
-    //-----------------------------------------------------------------
-    
-        public List<Sensor> GetAll() // return all registered sensors
-        {
-            return _sensors;
-        }
-
-    //-----------------------------------------------------------------
-
-        public Sensor? GetById(Guid id) // return the first sensor matching the ID
-        {
-            return _sensors.FirstOrDefault(s => s.Id == id);
-        }
-
-        
-    //-----------------------------------------------------------------
-
-        public void UpdateAttachedFile(Guid id, string filePath)//updates the object so there is no need to remove it
-        {
-            var sensor = GetById(id);
-            if (sensor is not null)
+            lock (_lock)
             {
-                sensor.AttachedFilePath = filePath;
+                if (_byMac.ContainsKey(key))
+                {
+                    throw new InvalidOperationException("A sensor with this MAC address is already registered.");
+                }
+
+                _byMac[key] = sensor;
+                _byId[sensor.Id] = sensor;
+                return sensor;
             }
         }
-    
-    //-----------------------------------------------------------------
 
-        //Check for duplicate MAC
-        public bool MacExists(string mac) =>
-    _sensors.Any(s => string.Equals(s.MacAddress, mac, StringComparison.OrdinalIgnoreCase));
+        //-----------------------------------------------------------------
+
+        public List<Sensor> GetAll() // return a copy of all registered sensors, in registration order
+        {
+            lock (_lock)
+            {
+                // Dictionaries do not guarantee order, so we sort for a stable list in the UI
+                return _byMac.Values.OrderBy(s => s.RegisteredAt).ToList();
+            }
+        }
+
+        //-----------------------------------------------------------------
+
+        public Sensor? GetById(Guid id) // O(1) lookup by ID
+        {
+            lock (_lock)
+            {
+                return _byId.TryGetValue(id, out var sensor) ? sensor : null;
+            }
+        }
+
+        //-----------------------------------------------------------------
+
+        public Sensor? GetByMac(string mac) // O(1) lookup by MAC (used when a device sends data)
+        {
+            lock (_lock)
+            {
+                return _byMac.TryGetValue(NormalizeMac(mac), out var sensor) ? sensor : null;
+            }
+        }
+
+        //-----------------------------------------------------------------
+
+        public void UpdateAttachedFile(Guid id, string filePath) // updates the object in place
+        {
+            lock (_lock)
+            {
+                if (_byId.TryGetValue(id, out var sensor))
+                {
+                    sensor.AttachedFilePath = filePath;
+                }
+            }
+        }
+
+        //-----------------------------------------------------------------
+
+        // Check for duplicate MAC
+        public bool MacExists(string mac)
+        {
+            lock (_lock)
+            {
+                return _byMac.ContainsKey(NormalizeMac(mac));
+            }
+        }
     }
 }

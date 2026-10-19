@@ -12,26 +12,28 @@ namespace SmartX.API.Endpoints
             // Climate: the value is a temperature (double)
 
             app.MapPost("/telemetry/climate",
-                (TelemetryPacket<double> packet, SensorRegistry registry, TelemetryStore store) =>
-                {
-                    var problem = CheckSensor(packet.SensorId, SensorCategory.Climate, registry);
-                    if (problem is not null)
-                    {
-                        return problem;
-                    }
+    (TelemetryPacket<double> packet, SensorRegistry registry, IngestionPipeline pipeline) =>
+    {
+        var problem = CheckSensor(packet.SensorId, SensorCategory.Climate, registry);
+        if (problem is not null)
+        {
+            return problem;
+        }
 
-                    store.AddClimate(packet);
-                    return Results.Created("/telemetry/climate", packet);
-                });
+        var item = new IngestionItem(packet.SensorId, SensorCategory.Climate, packet.Value, packet.TimeStamp);
+        bool critical = pipeline.Enqueue(item);
+
+        return Results.Accepted("/telemetry/climate", new { queued = true, critical });
+    });
 
             app.MapGet("/telemetry/climate", (TelemetryStore store) =>
                 Results.Ok(store.GetClimate()));
 
             //----------------------------------------------------------------------------
             // Electrical: the value is a PowerReading (watts)
-
+            // Valid readings go into the ingestion queues; the worker stores them afterwards
             app.MapPost("/telemetry/electrical",
-                (TelemetryPacket<PowerReading> packet, SensorRegistry registry, TelemetryStore store) =>
+                (TelemetryPacket<PowerReading> packet, SensorRegistry registry, IngestionPipeline pipeline) =>
                 {
                     var problem = CheckSensor(packet.SensorId, SensorCategory.Electrical, registry);
                     if (problem is not null)
@@ -44,35 +46,40 @@ namespace SmartX.API.Endpoints
                         return Results.BadRequest(new { errors = new[] { "Watts must be 0 or more." } });
                     }
 
-                    store.AddElectrical(packet);
-                    return Results.Created("/telemetry/electrical", packet);
+                    var item = new IngestionItem(packet.SensorId, SensorCategory.Electrical,
+                                                 packet.Value.Watts, packet.TimeStamp);
+                    bool critical = pipeline.Enqueue(item);
+
+                    return Results.Accepted("/telemetry/electrical", new { queued = true, critical });
                 });
 
             app.MapGet("/telemetry/electrical", (TelemetryStore store) =>
-                Results.Ok(store.GetElectrical()));
-
+    Results.Ok(store.GetElectrical()));
             //----------------------------------------------------------------------------
             // Control: the value is on/off (bool)
 
             app.MapPost("/telemetry/control",
-                (TelemetryPacket<bool> packet, SensorRegistry registry, TelemetryStore store) =>
-                {
-                    var problem = CheckSensor(packet.SensorId, SensorCategory.Control, registry);
-                    if (problem is not null)
-                    {
-                        return problem;
-                    }
+    (TelemetryPacket<bool> packet, SensorRegistry registry, IngestionPipeline pipeline) =>
+    {
+        var problem = CheckSensor(packet.SensorId, SensorCategory.Control, registry);
+        if (problem is not null)
+        {
+            return problem;
+        }
 
-                    store.AddControl(packet);
-                    return Results.Created("/telemetry/control", packet);
-                });
+        // bool becomes 1 or 0 to fit the shared queue item; the pipeline converts it back when storing
+        var item = new IngestionItem(packet.SensorId, SensorCategory.Control, packet.Value ? 1 : 0, packet.TimeStamp);
+        bool critical = pipeline.Enqueue(item);
+
+        return Results.Accepted("/telemetry/control", new { queued = true, critical });
+    });
 
             app.MapGet("/telemetry/control", (TelemetryStore store) =>
                 Results.Ok(store.GetControl()));
 
 
             app.MapPost("/telemetry/climate/batch",
-    (ClimateBatchRequest request, SensorRegistry registry, TelemetryStore store) =>
+    (ClimateBatchRequest request, SensorRegistry registry, IngestionPipeline pipeline) =>
     {
         var problem = CheckSensor(request.SensorId, SensorCategory.Climate, registry);
         if (problem is not null)
@@ -97,12 +104,17 @@ namespace SmartX.API.Endpoints
         // raw jagged array to typed List of packets
         var packets = ReadingBatchConverter.ToPackets(request.SensorId, request.Batches, start, interval);
 
+        int criticalCount = 0;
         foreach (var packet in packets)
         {
-            store.AddClimate(packet);
+            var item = new IngestionItem(packet.SensorId, SensorCategory.Climate, packet.Value, packet.TimeStamp);
+            if (pipeline.Enqueue(item))
+            {
+                criticalCount++;
+            }
         }
 
-        return Results.Ok(new { received = packets.Count });
+        return Results.Accepted("/telemetry/climate", new { received = packets.Count, critical = criticalCount });
     });
         }
 
