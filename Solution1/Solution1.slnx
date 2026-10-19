@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="SmartX.API/SmartX.API.csproj" />
   <Project Path="SmartX.Client/SmartX.Client.csproj" Id="c13796da-6b91-4fbe-b3db-bc94879a924c" />
+  <Project Path="SmartX.Simulator/SmartX.Simulator.csproj" Id="d31db811-4106-46d4-b89b-97f9910c064d" />
 </Solution>
