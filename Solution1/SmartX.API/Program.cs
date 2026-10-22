@@ -52,6 +52,8 @@ namespace SmartX.API
 
             app.MapInsightEndpoints();
 
+            app.MapHistoryStatsEndpoints();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

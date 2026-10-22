@@ -2,12 +2,14 @@
 {
     public record HistoryPoint(DateTime TimeStamp, double Value);
 
-    // One sorted timeline per sensor, so a chart can plot points without sorting them
+    // One AVL tree per sensor, keyed by timestamp.
+    // The tree keeps points sorted and balanced, so time-range queries
+    // do not have to scan every reading.
     public class SensorHistory
     {
         private const int MaxPointsPerSensor = 20000;
 
-        private readonly Dictionary<Guid, SortedDictionary<DateTime, double>> _timelines = new();
+        private readonly Dictionary<Guid, AvlTree<DateTime, double>> _timelines = new();
         private readonly object _lock = new();
 
         public void Record(Guid sensorId, DateTime timeStamp, double value)
@@ -16,28 +18,28 @@
             {
                 if (!_timelines.TryGetValue(sensorId, out var timeline))
                 {
-                    timeline = new SortedDictionary<DateTime, double>();
+                    timeline = new AvlTree<DateTime, double>();
                     _timelines[sensorId] = timeline;
                 }
 
-                // SortedDictionary throws on a duplicate key, so nudge by a tick until it is free
+                // Keys must be unique, so nudge by a tick until it is free
                 while (timeline.ContainsKey(timeStamp))
                 {
                     timeStamp = timeStamp.AddTicks(1);
                 }
 
-                timeline[timeStamp] = value;
+                timeline.Insert(timeStamp, value);
 
                 // Drop the oldest points if the timeline gets too long
                 while (timeline.Count > MaxPointsPerSensor)
                 {
-                    timeline.Remove(timeline.First().Key);
+                    timeline.TryRemoveMin(out _, out _);
                 }
             }
         }
 
-        // Returns points in time order, optionally filtered to a window and/or the latest N.
-        // Returns an empty list if the sensor has no readings yet.
+        // Points in time order, optionally filtered to a window and/or the latest N.
+        // Empty list if the sensor has no readings yet.
         public List<HistoryPoint> GetTimeline(Guid sensorId, DateTime? since, DateTime? until, int? limit)
         {
             lock (_lock)
@@ -47,20 +49,33 @@
                     return new List<HistoryPoint>();
                 }
 
-                IEnumerable<KeyValuePair<DateTime, double>> query = timeline;   // already in order
+                List<KeyValuePair<DateTime, double>> entries;
 
-                if (since is not null) query = query.Where(p => p.Key >= since.Value);
-                if (until is not null) query = query.Where(p => p.Key <= until.Value);
+                if (since is null && until is null && limit is > 0)
+                {
+                    // Fast path: just the newest N, no range needed
+                    entries = timeline.Last(limit.Value);
+                }
+                else
+                {
+                    // Range query on the tree: skips branches outside the window
+                    entries = timeline.Range(
+                        since ?? DateTime.MinValue,
+                        until ?? DateTime.MaxValue);
 
-                var points = query.Select(p => new HistoryPoint(p.Key, p.Value));
+                    if (limit is > 0 && entries.Count > limit.Value)
+                    {
+                        entries = entries.GetRange(entries.Count - limit.Value, limit.Value);
+                    }
+                }
 
-                if (limit is > 0) points = points.TakeLast(limit.Value);
-
-                return points.ToList();
+                return entries
+                    .Select(p => new HistoryPoint(p.Key, p.Value))
+                    .ToList();
             }
         }
 
-        // The most recent 'count' points, oldest first. Empty if the sensor has no readings.
+        // The most recent 'count' points, oldest first. Empty if no readings yet.
         public List<HistoryPoint> GetLatest(Guid sensorId, int count)
         {
             lock (_lock)
@@ -70,9 +85,23 @@
                     return new List<HistoryPoint>();
                 }
 
-                return timeline.TakeLast(count)
+                return timeline.Last(count)
                                .Select(p => new HistoryPoint(p.Key, p.Value))
                                .ToList();
+            }
+        }
+
+        // How big each tree is and how tall, to show it stays balanced
+        public (int Count, int Height) GetTreeStats(Guid sensorId)
+        {
+            lock (_lock)
+            {
+                if (!_timelines.TryGetValue(sensorId, out var timeline))
+                {
+                    return (0, 0);
+                }
+
+                return (timeline.Count, timeline.Height);
             }
         }
     }

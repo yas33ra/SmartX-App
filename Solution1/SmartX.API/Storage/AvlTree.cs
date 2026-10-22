@@ -111,6 +111,54 @@ public class AvlTree<TKey, TValue> where TKey : IComparable<TKey>
         return Rebalance(node);
     }
 
+
+    // ---------- remove the oldest (smallest) key ----------
+
+    
+    public bool TryRemoveMin(out TKey? key, out TValue? value)
+    {
+        if (_root is null)
+        {
+            key = default;
+            value = default;
+            return false;
+        }
+
+        _root = RemoveMinNode(_root, out var removed);
+        key = removed.Key;
+        value = removed.Value;
+        Count--;
+        return true;
+    }
+
+    private static Node? RemoveMinNode(Node node, out Node removed)
+    {
+        if (node.Left is null)
+        {
+            removed = node;       // this is the smallest node
+            return node.Right;    // its right child takes its place
+        }
+
+        node.Left = RemoveMinNode(node.Left, out removed);
+        return Rebalance(node);   // keep the tree balanced after removal
+    }
+
+  
+    public bool TryGetMinKey(out TKey? key)
+    {
+        var node = _root;
+        if (node is null)
+        {
+            key = default;
+            return false;
+        }
+
+        while (node.Left is not null) node = node.Left;
+        key = node.Key;
+        return true;
+    }
+
+
     // ---------- lookup ----------
 
     public bool TryGetValue(TKey key, out TValue? value)
