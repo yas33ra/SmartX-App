@@ -36,6 +36,8 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<MeshGraph>();
 
+            builder.Services.AddSingleton<MeshRouter>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
@@ -57,6 +59,8 @@ namespace SmartX.API
             app.MapHistoryStatsEndpoints();
 
             app.MapMeshEndpoints();
+
+            app.MapMeshRoutingEndpoints();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

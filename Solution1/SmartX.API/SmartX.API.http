@@ -83,3 +83,54 @@ DELETE {{host}}/mesh/links?from=AA:BB:CC:00:00:01&to=AA:BB:CC:00:00:05
 
 ### M15. Remove it again - expect 404
 DELETE {{host}}/mesh/links?from=AA:BB:CC:00:00:01&to=AA:BB:CC:00:00:05
+
+
+
+
+### B1. Everything reachable from the gateway
+GET {{host}}/mesh/reachable
+
+### B2. Route for Cold Room
+GET {{host}}/mesh/route/AA:BB:CC:00:00:02
+
+### B3. Mark Mains Meter DOWN
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/down
+
+### B4. Reachable again (Mains is down)
+GET {{host}}/mesh/reachable
+
+### B5. Route for Pump A (must go around)
+GET {{host}}/mesh/route/AA:BB:CC:00:00:04
+
+### B6. Route for the down node itself
+GET {{host}}/mesh/route/AA:BB:CC:00:00:03
+
+### B7. Network status
+GET {{host}}/mesh/status
+
+### B8. Also mark Greenhouse DOWN (the gateway loses both of its links)
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:01/down
+
+### B9. Reachable now
+GET {{host}}/mesh/reachable
+
+### B10. Status (cut-off nodes)
+GET {{host}}/mesh/status
+
+### B11. Bring both back up
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/up
+
+###
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:01/up
+
+### B12. Reachable after recovery
+GET {{host}}/mesh/reachable
+
+### B13. Gateway cannot go down - expect 400
+POST {{host}}/mesh/nodes/gateway/down
+
+### B14. Unknown node - expect 400
+GET {{host}}/mesh/route/FF:FF:FF:FF:FF:FF
+
+### B15. Reachable from a different start node (Valve B)
+GET {{host}}/mesh/reachable?from=AA:BB:CC:00:00:05

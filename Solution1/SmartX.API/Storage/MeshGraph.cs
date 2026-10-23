@@ -15,6 +15,8 @@ public class MeshGraph
     private readonly Dictionary<Guid, List<(Guid To, double Cost)>> _adjacency = new();
     private readonly object _lock = new();
 
+    private readonly HashSet<Guid> _down = new();
+
     public MeshGraph(SensorRegistry registry)
     {
         _registry = registry;
@@ -116,5 +118,41 @@ public class MeshGraph
 
             return links;
         }
+    }
+
+    // ---------- node health ----------
+
+    // Returns an error message, or null if the node was marked down
+    public string? SetDown(Guid id)
+    {
+        if (id == GatewayId) return "The gateway cannot be marked down.";
+        lock (_lock) { _down.Add(id); }
+        return null;
+    }
+
+    public void SetUp(Guid id)
+    {
+        lock (_lock) { _down.Remove(id); }
+    }
+
+    public bool IsDown(Guid id)
+    {
+        lock (_lock) { return _down.Contains(id); }
+    }
+
+    // ---------- names ----------
+
+    public string NameOf(Guid id) =>
+        id == GatewayId ? "Gateway" : _registry.GetById(id)?.Name ?? id.ToString();
+
+    public string? MacOf(Guid id) =>
+        id == GatewayId ? null : _registry.GetById(id)?.MacAddress;
+
+    // The gateway plus every registered sensor, even ones with no links
+    public List<Guid> GetAllNodeIds()
+    {
+        var ids = new List<Guid> { GatewayId };
+        ids.AddRange(_registry.GetAll().Select(s => s.Id));
+        return ids;
     }
 }
