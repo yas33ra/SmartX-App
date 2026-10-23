@@ -1,34 +1,85 @@
 @host = http://localhost:5056
 # Get these from GET /sensors (step 1 below), then paste them here:
-@sensorId = eb601796-e5bb-47ba-aca7-844f188796d2
+@sensorId = 0cc429e6-712a-40cc-a3ef-024f96714aac
 @pumpId = PASTE-A-CONTROL-DEVICE-ID-HERE
 
-### Send reading A (send this one, wait a few seconds)
-POST {{host}}/telemetry/electrical
+### M1. Gateway - Mains Meter (cost 2)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{ "sensorId": "{{sensorId}}", "value": { "watts": 101 } }
+{ "from": "gateway", "to": "AA:BB:CC:00:00:03", "cost": 2 }
 
-### Send reading B (send it, wait a few seconds)
-POST {{host}}/telemetry/electrical
+### M2. Gateway - Greenhouse Temp (cost 4)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{ "sensorId": "{{sensorId}}", "value": { "watts": 202 } }
+{ "from": "gateway", "to": "AA:BB:CC:00:00:01", "cost": 4 }
 
-### Send reading C
-POST {{host}}/telemetry/electrical
+### M3. Greenhouse - Cold Room (cost 1)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{ "sensorId": "{{sensorId}}", "value": { "watts": 303 } }
+{ "from": "AA:BB:CC:00:00:01", "to": "AA:BB:CC:00:00:02", "cost": 1 }
 
-### 1. All history (copy the timestamp of reading B from here)
-GET {{host}}/history/{{sensorId}}
+### M4. Cold Room - Mains Meter (cost 5)
+POST {{host}}/mesh/links
+Content-Type: application/json
 
-### 2. Range query: replace the times with ones from step 1, using a window that only covers B
-GET {{host}}/history/{{sensorId}}?since=2026-10-22T11:32:10Z&until=2026-10-22T11:32:20Z
+{ "from": "AA:BB:CC:00:00:02", "to": "AA:BB:CC:00:00:03", "cost": 5 }
 
-### 3. Newest 2 only
-GET {{host}}/history/{{sensorId}}?limit=2
+### M5. Mains Meter - Pump A (cost 2)
+POST {{host}}/mesh/links
+Content-Type: application/json
 
-### 4. Tree stats
-GET {{host}}/history/{{sensorId}}/stats
+{ "from": "AA:BB:CC:00:00:03", "to": "AA:BB:CC:00:00:04", "cost": 2 }
+
+### M6. Pump A - Valve B (cost 3)
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:04", "to": "AA:BB:CC:00:00:05", "cost": 3 }
+
+### M7. Greenhouse - Valve B (cost 6)
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:01", "to": "AA:BB:CC:00:00:05", "cost": 6 }
+
+### M8. Cold Room - Pump A (cost 4)
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:02", "to": "AA:BB:CC:00:00:04", "cost": 4 }
+
+### M9. View the whole mesh
+GET {{host}}/mesh
+
+### M10. Duplicate link (reversed order) - expect 400 "already linked"
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:03", "to": "gateway", "cost": 9 }
+
+### M11. Link to itself - expect 400
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:01", "to": "AA:BB:CC:00:00:01", "cost": 1 }
+
+### M12. Unknown MAC - expect 400
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:01", "to": "FF:FF:FF:FF:FF:FF", "cost": 1 }
+
+### M13. Bad cost - expect 400
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:02", "to": "gateway", "cost": 0 }
+
+### M14. Remove a link (Greenhouse - Valve B)
+DELETE {{host}}/mesh/links?from=AA:BB:CC:00:00:01&to=AA:BB:CC:00:00:05
+
+### M15. Remove it again - expect 404
+DELETE {{host}}/mesh/links?from=AA:BB:CC:00:00:01&to=AA:BB:CC:00:00:05

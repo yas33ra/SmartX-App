@@ -34,6 +34,8 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<InsightEngine>();
 
+            builder.Services.AddSingleton<MeshGraph>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
@@ -53,6 +55,8 @@ namespace SmartX.API
             app.MapInsightEndpoints();
 
             app.MapHistoryStatsEndpoints();
+
+            app.MapMeshEndpoints();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
