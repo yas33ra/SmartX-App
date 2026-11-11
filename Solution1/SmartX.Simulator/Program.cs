@@ -36,10 +36,13 @@ if (fleet.Count == 0)
     return;
 }
 
+await MeshScenario.BuildAsync();
+
 Console.WriteLine();
 Console.WriteLine("Keys:  S power spike | N near-limit power | H heat spike | U unusual reading");
 Console.WriteLine("       D disconnect Greenhouse | R reset alerts | P pause/resume ingestion");
 Console.WriteLine("       T teach demo pattern | Q quit");
+Console.WriteLine("       M build mesh | K take next node down | L restore all nodes");
 Console.WriteLine();
 
 while (true)
@@ -245,6 +248,18 @@ async Task HandleKeyAsync(ConsoleKey key)
 
         case ConsoleKey.T:
             await TeachDemoPatternAsync();
+            break;
+
+        case ConsoleKey.M:
+            await MeshScenario.BuildAsync();
+            break;
+
+        case ConsoleKey.K:
+            await MeshScenario.TakeNextNodeDownAsync();
+            break;
+
+        case ConsoleKey.L:
+            await MeshScenario.RestoreAllAsync();
             break;
     }
 }
