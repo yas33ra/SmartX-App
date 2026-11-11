@@ -18,5 +18,10 @@ namespace SmartX.Client
         {
             Navigator.NavigateTo(AppModule.CommandStream);
         }
+
+        private void btnTopology_Click(object sender, EventArgs e)
+        {
+            Navigator.NavigateTo(AppModule.Topology);
+        }
     }
 }

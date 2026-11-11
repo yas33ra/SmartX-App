@@ -54,6 +54,7 @@ namespace SmartX.Client.Navigation
                 AppModule.MainMenu => new MainMenuForm(),
                 AppModule.Ingestion => new IngestionForm(),
                 AppModule.CommandStream => new CommandStreamForm(),
+                AppModule.Topology => new TopologyForm(),
                 _ => throw new ArgumentOutOfRangeException(nameof(module))
             };
 

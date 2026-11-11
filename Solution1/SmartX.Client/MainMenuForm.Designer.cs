@@ -32,7 +32,6 @@
             btnCommandStream = new Button();
             btnTopology = new Button();
             btnIngestion = new Button();
-            label2 = new Label();
             SuspendLayout();
             // 
             // btnCommandStream
@@ -63,6 +62,7 @@
             btnTopology.TabIndex = 1;
             btnTopology.Text = "Network Topology and Mesh Routing";
             btnTopology.UseVisualStyleBackColor = false;
+            btnTopology.Click += btnTopology_Click;
             // 
             // btnIngestion
             // 
@@ -79,16 +79,6 @@
             btnIngestion.UseVisualStyleBackColor = false;
             btnIngestion.Click += btnIngestion_Click;
             // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.ForeColor = SystemColors.ControlDark;
-            label2.Location = new Point(623, 365);
-            label2.Name = "label2";
-            label2.Size = new Size(96, 15);
-            label2.TabIndex = 4;
-            label2.Text = "Coming in Part 3";
-            // 
             // MainMenuForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -96,14 +86,12 @@
             BackgroundImage = (Image)resources.GetObject("$this.BackgroundImage");
             BackgroundImageLayout = ImageLayout.Zoom;
             ClientSize = new Size(800, 450);
-            Controls.Add(label2);
             Controls.Add(btnIngestion);
             Controls.Add(btnTopology);
             Controls.Add(btnCommandStream);
             Name = "MainMenuForm";
             Text = "Form1";
             ResumeLayout(false);
-            PerformLayout();
         }
 
         #endregion

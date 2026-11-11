@@ -145,6 +145,18 @@ namespace SmartX.Client
 
         private void OnNodeClicked(object? sender, MeshNodeInfo node) => ShowSelected(node);
 
+        private void InitializeComponent()
+        {
+            SuspendLayout();
+            // 
+            // TopologyForm
+            // 
+            ClientSize = new Size(818, 388);
+            Name = "TopologyForm";
+            ResumeLayout(false);
+
+        }
+
         private void ShowSelected(MeshNodeInfo? node)
         {
             if (node is null)
