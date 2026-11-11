@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json.Nodes;
 
 namespace SmartX.Client.Services
 {
@@ -118,6 +119,82 @@ namespace SmartX.Client.Services
             var response = await _http.PostAsJsonAsync("/insights/search", new SearchEventRequest(term));
             response.EnsureSuccessStatusCode();
         }
+
+        // ---------- Network Topology (Part 3) ----------
+
+        // Reads the { "errors": [...] } message the API sends with a 400
+        private static async Task<string> ReadApiErrorAsync(HttpResponseMessage response)
+        {
+            var text = await response.Content.ReadAsStringAsync();
+
+            try
+            {
+                if (JsonNode.Parse(text)?["errors"] is JsonArray errors && errors.Count > 0)
+                {
+                    return string.Join(" ", errors.Select(e => (string?)e));
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // not JSON: fall through to the generic message
+            }
+
+            return $"The API returned {(int)response.StatusCode}.";
+        }
+
+        public async Task<MeshInfo> GetMeshAsync() =>
+            await _http.GetFromJsonAsync<MeshInfo>("/mesh") ?? new MeshInfo();
+
+        public async Task<MeshStatusInfo> GetMeshStatusAsync() =>
+            await _http.GetFromJsonAsync<MeshStatusInfo>("/mesh/status") ?? new MeshStatusInfo();
+
+        public async Task<MstInfo> GetMstAsync() =>
+            await _http.GetFromJsonAsync<MstInfo>("/mesh/mst") ?? new MstInfo();
+
+        // node = a MAC address or a sensor id
+        public async Task<RouteComparison> GetRouteComparisonAsync(string node)
+        {
+            var response = await _http.GetAsync($"/mesh/mst/route/{Uri.EscapeDataString(node)}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+
+            return await response.Content.ReadFromJsonAsync<RouteComparison>() ?? new RouteComparison();
+        }
+
+        public async Task SetNodeDownAsync(string node, bool down)
+        {
+            var action = down ? "down" : "up";
+            var response = await _http.PostAsync($"/mesh/nodes/{Uri.EscapeDataString(node)}/{action}", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+        }
+
+        // Readings for one sensor in time order, optionally limited to a time window (UTC)
+        public async Task<List<HistoryPointInfo>> GetHistoryAsync(
+            Guid sensorId, DateTime? sinceUtc = null, DateTime? untilUtc = null, int? limit = null)
+        {
+            var query = new List<string>();
+
+            if (sinceUtc is not null)
+                query.Add("since=" + Uri.EscapeDataString(sinceUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
+            if (untilUtc is not null)
+                query.Add("until=" + Uri.EscapeDataString(untilUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
+            if (limit is > 0)
+                query.Add("limit=" + limit.Value);
+
+            var url = $"/history/{sensorId}" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+
+            return await _http.GetFromJsonAsync<List<HistoryPointInfo>>(url) ?? new List<HistoryPointInfo>();
+        }
+
+        public async Task<HistoryStatsInfo> GetHistoryStatsAsync(Guid sensorId) =>
+            await _http.GetFromJsonAsync<HistoryStatsInfo>($"/history/{sensorId}/stats") ?? new HistoryStatsInfo();
     }
 
 

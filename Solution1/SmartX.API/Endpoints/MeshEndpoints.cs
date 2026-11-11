@@ -23,6 +23,7 @@ public static class MeshEndpoints
                     macAddress = (string?)null,
                     category = "Gateway",
                     isGateway = true,
+                    isDown = false,
                     linkCount = mesh.GetNeighbours(MeshGraph.GatewayId).Count
                 }
             };
@@ -34,6 +35,7 @@ public static class MeshEndpoints
                 macAddress = s.MacAddress,
                 category = s.Category.ToString(),
                 isGateway = false,
+                isDown = mesh.IsDown(s.Id),
                 linkCount = mesh.GetNeighbours(s.Id).Count
             }));
 
