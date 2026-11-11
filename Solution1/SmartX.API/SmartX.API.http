@@ -85,7 +85,11 @@ DELETE {{host}}/mesh/links?from=AA:BB:CC:00:00:01&to=AA:BB:CC:00:00:05
 DELETE {{host}}/mesh/links?from=AA:BB:CC:00:00:01&to=AA:BB:CC:00:00:05
 
 
+### M16. Put the Greenhouse - Valve B link back (cost 6)
+POST {{host}}/mesh/links
+Content-Type: application/json
 
+{ "from": "AA:BB:CC:00:00:01", "to": "AA:BB:CC:00:00:05", "cost": 6 }
 
 ### B1. Everything reachable from the gateway
 GET {{host}}/mesh/reachable
@@ -134,3 +138,33 @@ GET {{host}}/mesh/route/FF:FF:FF:FF:FF:FF
 
 ### B15. Reachable from a different start node (Valve B)
 GET {{host}}/mesh/reachable?from=AA:BB:CC:00:00:05
+
+### P1. The minimum spanning tree
+GET {{host}}/mesh/mst
+
+### P2. Valve B: cheapest route vs fewest hops
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:05
+
+### P3. Cold Room: cheapest route vs fewest hops
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:02
+
+### P4. Pump A
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:04
+
+### P5. Mark Mains Meter DOWN, then rebuild the tree
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/down
+
+### P6. Tree without Mains Meter
+GET {{host}}/mesh/mst
+
+### P7. Valve B route with Mains down
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:05
+
+### P8. Route for the down node
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:03
+
+### P9. Bring Mains Meter back up
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/up
+
+### P10. Unknown node - expect 400
+GET {{host}}/mesh/mst/route/FF:FF:FF:FF:FF:FF

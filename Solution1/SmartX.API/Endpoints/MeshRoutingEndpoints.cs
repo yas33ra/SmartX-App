@@ -138,6 +138,76 @@ public static class MeshRoutingEndpoints
             return Results.Ok(new { connected, down, cutOff, healing });
         });
 
+        // The minimum spanning tree: the cheapest set of links connecting everything
+        app.MapGet("/mesh/mst", (MeshGraph mesh, MeshRouter router) =>
+        {
+            var mst = router.MinimumSpanningTree();
+            var inTree = mst.CostToGateway.Keys.ToHashSet();
+
+            var edges = mst.Edges.Select(e => new
+            {
+                from = mesh.NameOf(e.FromId),
+                to = mesh.NameOf(e.ToId),
+                cost = e.Cost
+            });
+
+            // Nodes the tree could not include (down, or cut off by a down node)
+            var notInTree = mesh.GetAllNodeIds()
+                .Where(id => !inTree.Contains(id))
+                .Select(id => new { name = mesh.NameOf(id), isDown = mesh.IsDown(id) });
+
+            return Results.Ok(new
+            {
+                totalCost = mst.TotalCost,
+                edgeCount = mst.Edges.Count,
+                edges,
+                notInTree
+            });
+        });
+
+        // Compare the cheapest (MST) route with the fewest-hops (BFS) route for one node
+        app.MapGet("/mesh/mst/route/{node}", (string node, MeshGraph mesh, MeshRouter router) =>
+        {
+            if (!mesh.TryResolve(node, out var id))
+                return Results.BadRequest(new { errors = new[] { $"Unknown node: '{node}'." } });
+
+            var mstRoute = router.RouteViaMst(id);
+
+            if (mstRoute is null)
+            {
+                return Results.Ok(new
+                {
+                    node = mesh.NameOf(id),
+                    reachable = false,
+                    message = mesh.IsDown(id)
+                        ? "This node is down."
+                        : "No working route to the gateway."
+                });
+            }
+
+            var hopRoute = router.RouteToGateway(id)!;
+
+            string Path(List<Guid> route) =>
+                string.Join(" → ", route.Select(mesh.NameOf));
+
+            return Results.Ok(new
+            {
+                node = mesh.NameOf(id),
+                reachable = true,
+                powerEfficientRoute = new
+                {
+                    path = Path(mstRoute.Route),
+                    hops = mstRoute.Route.Count - 1,
+                    cost = mstRoute.Cost
+                },
+                fewestHopsRoute = new
+                {
+                    path = Path(hopRoute),
+                    hops = hopRoute.Count - 1,
+                    cost = router.RouteCost(hopRoute)
+                }
+            });
+        });
         return app;
     }
 }
