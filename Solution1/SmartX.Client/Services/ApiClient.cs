@@ -195,6 +195,29 @@ namespace SmartX.Client.Services
 
         public async Task<HistoryStatsInfo> GetHistoryStatsAsync(Guid sensorId) =>
             await _http.GetFromJsonAsync<HistoryStatsInfo>($"/history/{sensorId}/stats") ?? new HistoryStatsInfo();
+
+        // fromNode / toNode can be a sensor id, a MAC address or "gateway"
+        public async Task AddLinkAsync(string fromNode, string toNode, double cost)
+        {
+            var response = await _http.PostAsJsonAsync("/mesh/links",
+                new { From = fromNode, To = toNode, Cost = cost });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+        }
+
+        public async Task RemoveLinkAsync(string fromNode, string toNode)
+        {
+            var response = await _http.DeleteAsync(
+                $"/mesh/links?from={Uri.EscapeDataString(fromNode)}&to={Uri.EscapeDataString(toNode)}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+        }
     }
 
 

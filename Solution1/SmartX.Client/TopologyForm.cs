@@ -14,6 +14,12 @@ namespace SmartX.Client
 
         private enum HistoryMode { Range, Latest, LastHour }
 
+        // One row in the "current links" list
+        private sealed record LinkChoice(Guid OtherId, string OtherName, double Cost)
+        {
+            public override string ToString() => $"{OtherName}   (cost {Cost:0.##})";
+        }
+
         // Top bar and drawing
         private readonly Label _lblTitle = new();
         private readonly Button _btnRefresh = new();
@@ -27,6 +33,7 @@ namespace SmartX.Client
         private readonly TabControl _tabs = new();
         private readonly TabPage _tabRoute = new("Route");
         private readonly TabPage _tabHistory = new("History log");
+        private readonly TabPage _tabLinks = new("Links");
 
         // Route tab
         private readonly Label _lblTrack = new();
@@ -48,12 +55,26 @@ namespace SmartX.Client
         private readonly Label _lblHistoryInfo = new();
         private readonly ListView _lvHistory = new();
 
+        // Links tab
+        private readonly Label _lblLinkNode = new();
+        private readonly Label _lblLinkTo = new();
+        private readonly ComboBox _cmbLinkTo = new();
+        private readonly Label _lblCost = new();
+        private readonly NumericUpDown _nudCost = new();
+        private readonly Button _btnAddLink = new();
+        private readonly Button _btnRemoveLink = new();
+        private readonly Label _lblLinkInfo = new();
+        private readonly Label _lblLinksHeader = new();
+        private readonly ListBox _lstLinks = new();
+
         // Polls the API every 3 seconds, but only while this page is visible
         private readonly System.Windows.Forms.Timer _timer = new() { Interval = 3000 };
         private bool _refreshing;
 
         private MeshNodeInfo? _selected;
         private RouteComparison? _lastRoute;
+        private MeshInfo _latestMesh = new();
+        private string _linkSignature = "";   // lets us skip rebuilding the link lists when nothing changed
 
         public TopologyForm()
         {
@@ -66,6 +87,7 @@ namespace SmartX.Client
             BuildRightPanel();
             BuildRouteTab();
             BuildHistoryTab();
+            BuildLinksTab();
 
             // The drawn mesh (left, grows with the window)
             _meshPanel.Location = new Point(10, 55);
@@ -132,6 +154,7 @@ namespace SmartX.Client
             _tabs.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             _tabs.TabPages.Add(_tabRoute);
             _tabs.TabPages.Add(_tabHistory);
+            _tabs.TabPages.Add(_tabLinks);
 
             _rightPanel.Controls.Add(_lblSelected);
             _rightPanel.Controls.Add(_tabs);
@@ -261,6 +284,70 @@ namespace SmartX.Client
             _tabHistory.Controls.Add(_lvHistory);
         }
 
+        private void BuildLinksTab()
+        {
+            _lblLinkNode.Location = new Point(6, 8);
+            _lblLinkNode.Size = new Size(336, 24);
+            _lblLinkNode.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            _lblLinkNode.Text = "Select a node in the drawing first.";
+
+            _lblLinkTo.Location = new Point(6, 40);
+            _lblLinkTo.Size = new Size(336, 20);
+            _lblLinkTo.Text = "Link it to:";
+
+            _cmbLinkTo.Location = new Point(6, 62);
+            _cmbLinkTo.Size = new Size(336, 28);
+            _cmbLinkTo.DropDownStyle = ComboBoxStyle.DropDownList;
+
+            _lblCost.Location = new Point(6, 98);
+            _lblCost.Size = new Size(336, 20);
+            _lblCost.Text = "Cost (power use, lower is better):";
+
+            _nudCost.Location = new Point(6, 120);
+            _nudCost.Size = new Size(110, 27);
+            _nudCost.DecimalPlaces = 1;
+            _nudCost.Increment = 0.5M;
+            _nudCost.Minimum = 0.1M;
+            _nudCost.Maximum = 1000M;
+            _nudCost.Value = 1M;
+
+            _btnAddLink.Text = "Add link";
+            _btnAddLink.Location = new Point(6, 156);
+            _btnAddLink.Size = new Size(166, 32);
+            _btnAddLink.Enabled = false;
+            _btnAddLink.Click += async (s, e) => await AddLinkAsync();
+
+            _btnRemoveLink.Text = "Remove link";
+            _btnRemoveLink.Location = new Point(176, 156);
+            _btnRemoveLink.Size = new Size(166, 32);
+            _btnRemoveLink.Enabled = false;
+            _btnRemoveLink.Click += async (s, e) => await RemoveLinkAsync();
+
+            _lblLinkInfo.Location = new Point(6, 194);
+            _lblLinkInfo.Size = new Size(336, 36);
+            _lblLinkInfo.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
+            _lblLinksHeader.Location = new Point(6, 234);
+            _lblLinksHeader.Size = new Size(336, 20);
+            _lblLinksHeader.Text = "Current links of this node (click one to remove it):";
+
+            _lstLinks.Location = new Point(6, 256);
+            _lstLinks.Size = new Size(336, 130);
+            _lstLinks.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            _lstLinks.SelectedIndexChanged += OnLinkListSelectionChanged;
+
+            _tabLinks.Controls.Add(_lblLinkNode);
+            _tabLinks.Controls.Add(_lblLinkTo);
+            _tabLinks.Controls.Add(_cmbLinkTo);
+            _tabLinks.Controls.Add(_lblCost);
+            _tabLinks.Controls.Add(_nudCost);
+            _tabLinks.Controls.Add(_btnAddLink);
+            _tabLinks.Controls.Add(_btnRemoveLink);
+            _tabLinks.Controls.Add(_lblLinkInfo);
+            _tabLinks.Controls.Add(_lblLinksHeader);
+            _tabLinks.Controls.Add(_lstLinks);
+        }
+
         // ---------- refreshing ----------
 
         private async void OnVisibleChanged(object? sender, EventArgs e)
@@ -292,6 +379,7 @@ namespace SmartX.Client
                 var status = statusTask.Result;
                 var mst = mstTask.Result;
 
+                _latestMesh = mesh;
                 _meshPanel.SetData(mesh, mst);
                 ShowSelected(mesh.Nodes.FirstOrDefault(n => n.Id == _meshPanel.SelectedId));
 
@@ -339,6 +427,7 @@ namespace SmartX.Client
                 _lblSelected.Text = "Click a node to select it.";
                 _btnDown.Enabled = false;
                 _btnUp.Enabled = false;
+                UpdateLinkControls();
                 return;
             }
 
@@ -350,6 +439,8 @@ namespace SmartX.Client
             // The gateway can never go down
             _btnDown.Enabled = !node.IsGateway && !node.IsDown;
             _btnUp.Enabled = !node.IsGateway && node.IsDown;
+
+            UpdateLinkControls();
         }
 
         // ---------- route tracking ----------
@@ -433,6 +524,138 @@ namespace SmartX.Client
             {
                 MessageBox.Show("Cannot reach the API. Is SmartX.API running?", "Smart-X",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        // ---------- links tab ----------
+
+        // Rebuilds the drop-down and the list, but only when something actually changed,
+        // so the 3-second refresh never closes a drop-down the user has open.
+        private void UpdateLinkControls()
+        {
+            var node = _selected;
+
+            _btnAddLink.Enabled = node is not null;
+            _btnRemoveLink.Enabled = node is not null;
+
+            if (node is null)
+            {
+                _lblLinkNode.Text = "Select a node in the drawing first.";
+                _cmbLinkTo.Items.Clear();
+                _lstLinks.Items.Clear();
+                _linkSignature = "";
+                return;
+            }
+
+            _lblLinkNode.Text = $"Linking: {node.Name}";
+
+            var others = _latestMesh.Nodes.Where(n => n.Id != node.Id).ToList();
+
+            var mine = _latestMesh.Links
+                .Where(l => l.FromId == node.Id || l.ToId == node.Id)
+                .Select(l => l.FromId == node.Id
+                    ? new LinkChoice(l.ToId, l.ToName, l.Cost)
+                    : new LinkChoice(l.FromId, l.FromName, l.Cost))
+                .OrderBy(c => c.OtherName)
+                .ToList();
+
+            string signature = node.Id + "|" +
+                               string.Join(",", others.Select(n => n.Id)) + "|" +
+                               string.Join(",", mine.Select(c => $"{c.OtherId}:{c.Cost}"));
+
+            if (signature == _linkSignature) return;   // nothing changed
+            _linkSignature = signature;
+
+            // Drop-down of possible neighbours (keeps the user's choice if it still exists)
+            var previousId = (_cmbLinkTo.SelectedItem as MeshNodeInfo)?.Id;
+
+            _cmbLinkTo.BeginUpdate();
+            _cmbLinkTo.Items.Clear();
+            _cmbLinkTo.Items.AddRange(others.Cast<object>().ToArray());
+
+            int index = previousId is null ? -1 : others.FindIndex(n => n.Id == previousId);
+            if (index >= 0) _cmbLinkTo.SelectedIndex = index;
+            _cmbLinkTo.EndUpdate();
+
+            // List of this node's current links
+            _lstLinks.BeginUpdate();
+            _lstLinks.Items.Clear();
+            _lstLinks.Items.AddRange(mine.Cast<object>().ToArray());
+            _lstLinks.EndUpdate();
+        }
+
+        // Clicking an existing link fills in the drop-down and cost, ready to remove or change
+        private void OnLinkListSelectionChanged(object? sender, EventArgs e)
+        {
+            if (_lstLinks.SelectedItem is not LinkChoice choice) return;
+
+            for (int i = 0; i < _cmbLinkTo.Items.Count; i++)
+            {
+                if (_cmbLinkTo.Items[i] is MeshNodeInfo n && n.Id == choice.OtherId)
+                {
+                    _cmbLinkTo.SelectedIndex = i;
+                    break;
+                }
+            }
+
+            _nudCost.Value = Math.Clamp((decimal)choice.Cost, _nudCost.Minimum, _nudCost.Maximum);
+        }
+
+        private void ShowLinkMessage(string text, bool isError)
+        {
+            _lblLinkInfo.ForeColor = isError ? Color.Firebrick : Color.DarkGreen;
+            _lblLinkInfo.Text = text;
+        }
+
+        private async Task AddLinkAsync()
+        {
+            if (_selected is null) return;
+
+            if (_cmbLinkTo.SelectedItem is not MeshNodeInfo other)
+            {
+                ShowLinkMessage("Choose a node to link to.", isError: true);
+                return;
+            }
+
+            try
+            {
+                await _api.AddLinkAsync(_selected.Id.ToString(), other.Id.ToString(), (double)_nudCost.Value);
+                ShowLinkMessage($"Linked {_selected.Name} and {other.Name} (cost {_nudCost.Value:0.##}).", isError: false);
+                await RefreshAsync();
+            }
+            catch (InvalidOperationException ex)
+            {
+                ShowLinkMessage(ex.Message, isError: true);
+            }
+            catch (HttpRequestException)
+            {
+                ShowLinkMessage("Cannot reach the API. Is SmartX.API running?", isError: true);
+            }
+        }
+
+        private async Task RemoveLinkAsync()
+        {
+            if (_selected is null) return;
+
+            if (_cmbLinkTo.SelectedItem is not MeshNodeInfo other)
+            {
+                ShowLinkMessage("Choose a node (or click a link in the list) to remove.", isError: true);
+                return;
+            }
+
+            try
+            {
+                await _api.RemoveLinkAsync(_selected.Id.ToString(), other.Id.ToString());
+                ShowLinkMessage($"Removed the link between {_selected.Name} and {other.Name}.", isError: false);
+                await RefreshAsync();
+            }
+            catch (InvalidOperationException ex)
+            {
+                ShowLinkMessage(ex.Message, isError: true);
+            }
+            catch (HttpRequestException)
+            {
+                ShowLinkMessage("Cannot reach the API. Is SmartX.API running?", isError: true);
             }
         }
 
