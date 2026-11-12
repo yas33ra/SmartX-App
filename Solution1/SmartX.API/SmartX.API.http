@@ -184,3 +184,22 @@ Content-Type: application/json
 
 ### Q3 - see the queue (newest first)
 GET {{host}}/insights/search-history
+
+
+### H1 - search "pump" (send, then H2, then pump, valve, pump again)
+POST {{host}}/insights/search
+Content-Type: application/json
+
+{ "term": "pump" }
+
+### H2 - search "valve"
+POST {{host}}/insights/search
+Content-Type: application/json
+
+{ "term": "valve" }
+
+### H3 - everything currently suggested
+GET {{host}}/insights/suggestions
+
+### H4 - only suggestions that are NEW since the last call
+GET {{host}}/insights/suggestions/new

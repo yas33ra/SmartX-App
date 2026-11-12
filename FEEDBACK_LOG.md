@@ -35,7 +35,7 @@ Track changes made in response to lecturer feedback.
 | Feedback | Structure / approach | Status | Commit |
 |---|---|---|---|
 | No explicit query history `Queue<T>` | `SearchHistory` class: `Queue<string>`, capped at 10, oldest dropped first. `GET /insights/search-history`. | Done | |
-| No dedicated `HashSet` for active suggestion dedup | `HashSet<string>` of suggestion keys | Not started | |
+| No dedicated `HashSet` for active suggestion dedup | `HashSet<string>` of suggestion keys | Done | |
 | Prediction pipeline polls instead of pushing | Server-Sent Events over a `Channel<T>` | Not started | |
 
 ## Known limits

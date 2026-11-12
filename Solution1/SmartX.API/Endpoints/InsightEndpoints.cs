@@ -53,6 +53,24 @@ namespace SmartX.API.Endpoints
                 return Results.Ok(suggestions);
             });
 
+            // Only suggestions that were not on offer last time (this is what a push will use)
+            group.MapGet("/suggestions/new", (PatternEngine patterns, AlertTracker alerts, CommandService commands) =>
+            {
+                var activeAlertKeys = alerts.GetAll().Select(a => $"alert:{a.SensorId}:{a.Kind}");
+                var states = commands.GetState().ToDictionary(kv => kv.Key, kv => kv.Value);
+
+                var fresh = patterns.TakeNewSuggestions(activeAlertKeys, action => AlreadyDone(action, states))
+                    .Select(s => new
+                    {
+                        kind = s.Action.Type.ToString(),
+                        text = s.Action.Label,
+                        confidence = Math.Round(s.Confidence * 100)
+                    });
+
+                return Results.Ok(fresh);
+            });
+
+
             // Devices that look problematic right now
             group.MapGet("/devices", (InsightEngine engine) =>
                 Results.Ok(engine.Analyse().Select(i => new
