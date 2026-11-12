@@ -16,12 +16,25 @@ namespace SmartX.Client
         private readonly MeshPanel _meshPanel = new();
         private readonly Panel _rightPanel = new();
         private readonly Label _lblSelected = new();
+
+        // Route tracker
+        private readonly Label _lblTrack = new();
+        private readonly TextBox _txtNode = new();
+        private readonly Button _btnFindRoute = new();
+        private readonly CheckBox _chkFewest = new();
+        private readonly TextBox _txtRoute = new();
+        private readonly Button _btnDown = new();
+        private readonly Button _btnUp = new();
+
         private readonly Label _lblComingNext = new();
         private readonly Label _lblStatus = new();
 
         // Polls the API every 3 seconds, but only while this page is visible
         private readonly System.Windows.Forms.Timer _timer = new() { Interval = 3000 };
         private bool _refreshing;
+
+        private MeshNodeInfo? _selected;
+        private RouteComparison? _lastRoute;
 
         public TopologyForm()
         {
@@ -55,23 +68,79 @@ namespace SmartX.Client
             _meshPanel.BorderStyle = BorderStyle.FixedSingle;
             _meshPanel.NodeClicked += OnNodeClicked;
 
-            // Right side: selected node now, route lookup and history log in the next steps
+            // Right side
             _rightPanel.Location = new Point(ClientSize.Width - 390, 55);
             _rightPanel.Size = new Size(380, ClientSize.Height - 105);
             _rightPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             _rightPanel.BorderStyle = BorderStyle.FixedSingle;
 
             _lblSelected.Location = new Point(10, 10);
-            _lblSelected.Size = new Size(358, 60);
+            _lblSelected.Size = new Size(358, 70);
             _lblSelected.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             _lblSelected.Text = "Click a node to select it.";
 
-            _lblComingNext.Location = new Point(10, 90);
-            _lblComingNext.Size = new Size(358, 60);
+            _lblTrack.Location = new Point(10, 88);
+            _lblTrack.Size = new Size(358, 20);
+            _lblTrack.Text = "Track a route (MAC address, sensor id or 'gateway'):";
+
+            _txtNode.Location = new Point(10, 112);
+            _txtNode.Size = new Size(255, 27);
+            _txtNode.KeyDown += async (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    await FindRouteAsync();
+                }
+            };
+
+            _btnFindRoute.Text = "Find route";
+            _btnFindRoute.Location = new Point(273, 110);
+            _btnFindRoute.Size = new Size(95, 30);
+            _btnFindRoute.Click += async (s, e) => await FindRouteAsync();
+
+            _chkFewest.Text = "Highlight the fewest-hops route instead";
+            _chkFewest.Location = new Point(10, 146);
+            _chkFewest.Size = new Size(358, 24);
+            _chkFewest.CheckedChanged += (s, e) =>
+            {
+                if (_lastRoute is not null) ShowRoute(_lastRoute);
+            };
+
+            _txtRoute.Location = new Point(10, 176);
+            _txtRoute.Size = new Size(358, 170);
+            _txtRoute.Multiline = true;
+            _txtRoute.ReadOnly = true;
+            _txtRoute.ScrollBars = ScrollBars.Vertical;
+            _txtRoute.BackColor = Color.White;
+            _txtRoute.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            _txtRoute.Text = "Click a node, or type a MAC address and press Enter.";
+
+            _btnDown.Text = "Mark node DOWN";
+            _btnDown.Location = new Point(10, 356);
+            _btnDown.Size = new Size(175, 34);
+            _btnDown.Enabled = false;
+            _btnDown.Click += async (s, e) => await SetSelectedNodeDownAsync(true);
+
+            _btnUp.Text = "Mark node UP";
+            _btnUp.Location = new Point(193, 356);
+            _btnUp.Size = new Size(175, 34);
+            _btnUp.Enabled = false;
+            _btnUp.Click += async (s, e) => await SetSelectedNodeDownAsync(false);
+
+            _lblComingNext.Location = new Point(10, 410);
+            _lblComingNext.Size = new Size(358, 40);
             _lblComingNext.ForeColor = Color.Gray;
-            _lblComingNext.Text = "Route lookup and the history log are added in the next steps.";
+            _lblComingNext.Text = "The history log is added in the next step.";
 
             _rightPanel.Controls.Add(_lblSelected);
+            _rightPanel.Controls.Add(_lblTrack);
+            _rightPanel.Controls.Add(_txtNode);
+            _rightPanel.Controls.Add(_btnFindRoute);
+            _rightPanel.Controls.Add(_chkFewest);
+            _rightPanel.Controls.Add(_txtRoute);
+            _rightPanel.Controls.Add(_btnDown);
+            _rightPanel.Controls.Add(_btnUp);
             _rightPanel.Controls.Add(_lblComingNext);
 
             // Status bar along the bottom
@@ -129,6 +198,9 @@ namespace SmartX.Client
                 _lblStatus.Text =
                     $"Connected: {status.Connected.Count}   |   Down: {status.Down.Count}   |   " +
                     $"Unreachable: {status.CutOff.Count}   |   Cheapest tree cost: {mst.TotalCost:0.##}";
+
+                // Keep the tracked route up to date when nodes go down or come back
+                await FindRouteAsync(quiet: true);
             }
             catch (Exception ex)
             {
@@ -143,25 +215,26 @@ namespace SmartX.Client
             }
         }
 
-        private void OnNodeClicked(object? sender, MeshNodeInfo node) => ShowSelected(node);
+        // ---------- selecting a node ----------
 
-        private void InitializeComponent()
+        private async void OnNodeClicked(object? sender, MeshNodeInfo node)
         {
-            SuspendLayout();
-            // 
-            // TopologyForm
-            // 
-            ClientSize = new Size(818, 388);
-            Name = "TopologyForm";
-            ResumeLayout(false);
+            ShowSelected(node);
 
+            // Fill the box and track this node straight away
+            _txtNode.Text = node.IsGateway ? "gateway" : node.MacAddress ?? node.Id.ToString();
+            await FindRouteAsync();
         }
 
         private void ShowSelected(MeshNodeInfo? node)
         {
+            _selected = node;
+
             if (node is null)
             {
                 _lblSelected.Text = "Click a node to select it.";
+                _btnDown.Enabled = false;
+                _btnUp.Enabled = false;
                 return;
             }
 
@@ -169,6 +242,94 @@ namespace SmartX.Client
             _lblSelected.Text = $"Selected: {node.Name}\n{address}" +
                                 (node.IsDown ? "\nSTATUS: DOWN" : "") +
                                 $"\nLinks: {node.LinkCount}";
+
+            // The gateway can never go down
+            _btnDown.Enabled = !node.IsGateway && !node.IsDown;
+            _btnUp.Enabled = !node.IsGateway && node.IsDown;
+        }
+
+        // ---------- route tracking ----------
+
+        private async Task FindRouteAsync(bool quiet = false)
+        {
+            string node = _txtNode.Text.Trim();
+
+            if (node.Length == 0)
+            {
+                if (!quiet)
+                {
+                    _txtRoute.Text = "Enter a MAC address, sensor id or 'gateway', or click a node.";
+                }
+                return;
+            }
+
+            try
+            {
+                var result = await _api.GetRouteComparisonAsync(node);
+                _lastRoute = result;
+                ShowRoute(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                if (quiet) return;
+                _lastRoute = null;
+                _meshPanel.ClearRoute();
+                _txtRoute.Text = "Error: " + ex.Message;
+            }
+            catch (HttpRequestException)
+            {
+                if (quiet) return;
+                _txtRoute.Text = "Cannot reach the API. Is SmartX.API running?";
+            }
+        }
+
+        private void ShowRoute(RouteComparison result)
+        {
+            var nl = Environment.NewLine;
+
+            if (!result.Reachable)
+            {
+                _meshPanel.ClearRoute();
+                _txtRoute.Text = $"Node: {result.Node}{nl}{nl}{result.Message}";
+                return;
+            }
+
+            var cheapest = result.PowerEfficientRoute;
+            var fewest = result.FewestHopsRoute;
+
+            _txtRoute.Text =
+                $"Node: {result.Node}{nl}{nl}" +
+                $"Cheapest route (least power):{nl}" +
+                $"  {cheapest?.Path}{nl}" +
+                $"  {cheapest?.Hops} hops, cost {cheapest?.Cost:0.##}{nl}{nl}" +
+                $"Fewest-hops route:{nl}" +
+                $"  {fewest?.Path}{nl}" +
+                $"  {fewest?.Hops} hops, cost {fewest?.Cost:0.##}";
+
+            // Orange line on the drawing
+            _meshPanel.SetRoute(_chkFewest.Checked ? fewest?.Path : cheapest?.Path);
+        }
+
+        // ---------- take the selected node down / bring it back ----------
+
+        private async Task SetSelectedNodeDownAsync(bool down)
+        {
+            if (_selected is null || _selected.IsGateway) return;
+
+            try
+            {
+                await _api.SetNodeDownAsync(_selected.Id.ToString(), down);
+                await RefreshAsync();
+            }
+            catch (InvalidOperationException ex)
+            {
+                MessageBox.Show(ex.Message, "Smart-X", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            catch (HttpRequestException)
+            {
+                MessageBox.Show("Cannot reach the API. Is SmartX.API running?", "Smart-X",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
     }
 }
