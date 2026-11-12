@@ -29,6 +29,15 @@ Track changes made in response to lecturer feedback.
 | 6 | Device simulator | Console app with keys to test spikes, disconnects and patterns. | Done | |
 | 7 | Docker (optional) | `Dockerfile` and `docker-compose.yml` written. | Deferred: Docker Desktop would not start on my computer, so I could not test them. Not required by the brief. | |
 
+
+## Part 2 feedback, addressed during Part 3
+
+| Feedback | Structure / approach | Status | Commit |
+|---|---|---|---|
+| No explicit query history `Queue<T>` | `SearchHistory` class: `Queue<string>`, capped at 10, oldest dropped first. `GET /insights/search-history`. | Done | |
+| No dedicated `HashSet` for active suggestion dedup | `HashSet<string>` of suggestion keys | Not started | |
+| Prediction pipeline polls instead of pushing | Server-Sent Events over a `Channel<T>` | Not started | |
+
 ## Known limits
 - All data is kept in memory, so restarting the API clears devices, alerts and learned patterns.
 - A spike only counts as a new pattern event after its alert is cleared first.

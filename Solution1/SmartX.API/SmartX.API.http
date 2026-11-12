@@ -168,3 +168,19 @@ POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/up
 
 ### P10. Unknown node - expect 400
 GET {{host}}/mesh/mst/route/FF:FF:FF:FF:FF:FF
+
+
+### Q1 - search a few terms
+POST {{host}}/insights/search
+Content-Type: application/json
+
+{ "term": "new11" }
+
+### Q2 - another term
+POST {{host}}/insights/search
+Content-Type: application/json
+
+{ "term": "valve" }
+
+### Q3 - see the queue (newest first)
+GET {{host}}/insights/search-history

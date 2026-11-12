@@ -11,17 +11,23 @@ namespace SmartX.API.Endpoints
             var group = app.MapGroup("/insights");
 
             // The form calls this when the USER searches (not on its background refresh)
-            group.MapPost("/search", (SearchEvent request, PatternEngine patterns) =>
+            group.MapPost("/search", (SearchEvent request, PatternEngine patterns, SearchHistory history) =>
             {
                 var term = request.Term?.Trim().ToLowerInvariant();
                 if (!string.IsNullOrEmpty(term))
                 {
+                    history.Add(term);   // the recent-searches queue
+
                     patterns.RecordAction(new ActionEvent(
                         Key: $"search:{term}", Type: ActionType.Search,
                         Label: $"Search for \"{term}\"", SearchTerm: term));
                 }
                 return Results.NoContent();
             });
+
+            // The last few searches, newest first
+            group.MapGet("/search-history", (SearchHistory history) =>
+                Results.Ok(history.GetRecent()));
 
             // What the engine suggests right now
             group.MapGet("/suggestions", (PatternEngine patterns, AlertTracker alerts,

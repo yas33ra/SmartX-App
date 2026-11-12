@@ -38,6 +38,8 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<MeshRouter>();
 
+            builder.Services.AddSingleton<SearchHistory>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();
