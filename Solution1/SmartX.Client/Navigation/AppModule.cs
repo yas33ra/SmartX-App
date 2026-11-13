@@ -8,6 +8,7 @@ namespace SmartX.Client.Navigation
     {
         MainMenu,
         Ingestion,
-        CommandStream
+        CommandStream,
+        Topology
     }
 }

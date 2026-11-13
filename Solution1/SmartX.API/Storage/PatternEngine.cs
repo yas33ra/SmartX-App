@@ -25,6 +25,10 @@
         // Remembers the details of every action seen, so a key can be turned back into something runnable
         private readonly Dictionary<string, ActionEvent> _actions = new();
 
+        // Keys of the suggestions currently on offer.
+        // A HashSet cannot hold the same key twice, and Add() tells us if it was new.
+        private readonly HashSet<string> _activeSuggestionKeys = new();
+
         private readonly object _lock = new();
         private string? _previousKey;
         private DateTime _previousAt;
@@ -102,6 +106,32 @@
                            .ThenByDescending(s => s.Count)
                            .Take(max)
                            .ToList();
+            }
+        }
+
+        // Like Suggest, but returns only suggestions that were NOT already on offer.
+        // "exclude" lets the caller skip ones that make no sense (e.g. pump is already off).
+        // Returns true when the suggestions on offer are different from last time.
+        // "current" is always filled with the full, up-to-date list.
+        public bool TryGetChangedSuggestions(
+            IEnumerable<string> activeTriggerKeys,
+            Func<ActionEvent, bool>? exclude,
+            out List<PatternSuggestion> current,
+            int max = 3)
+        {
+            lock (_lock)
+            {
+                current = Suggest(activeTriggerKeys, max)
+                    .Where(s => exclude is null || !exclude(s.Action))
+                    .ToList();
+
+                var currentKeys = current.Select(s => s.Action.Key).ToHashSet();
+
+                if (_activeSuggestionKeys.SetEquals(currentKeys)) return false;   // nothing changed
+
+                _activeSuggestionKeys.Clear();
+                _activeSuggestionKeys.UnionWith(currentKeys);
+                return true;
             }
         }
 

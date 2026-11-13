@@ -1,141 +1,203 @@
 @host = http://localhost:5056
 # Get these from GET /sensors (step 1 below), then paste them here:
-@sensorId = PASTE-A-SENSOR-ID-HERE
+@sensorId = 0cc429e6-712a-40cc-a3ef-024f96714aac
 @pumpId = PASTE-A-CONTROL-DEVICE-ID-HERE
 
-### 1. List all sensors (copy ids from here)
-GET {{host}}/sensors
-
-### 2. Register a sensor (category: 0 = Climate, 1 = Electrical, 2 = Control)
-POST {{host}}/sensors
+### M1. Gateway - Mains Meter (cost 2)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{
-  "name": "Test Meter",
-  "macAddress": "AA:BB:CC:00:00:99",
-  "facility": "Main Campus",
-  "zone": "Greenhouse 1",
-  "subZone": "Bench A",
-  "category": 1
-}
+{ "from": "gateway", "to": "AA:BB:CC:00:00:03", "cost": 2 }
 
-### 3. Register the SAME MAC again -> should be refused (Dictionary test)
-POST {{host}}/sensors
+### M2. Gateway - Greenhouse Temp (cost 4)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{
-  "name": "Duplicate Meter",
-  "macAddress": "aa-bb-cc-00-00-99",
-  "facility": "Main Campus",
-  "zone": "Greenhouse 1",
-  "subZone": "Bench A",
-  "category": 1
-}
+{ "from": "gateway", "to": "AA:BB:CC:00:00:01", "cost": 4 }
 
-### 4. Devices with state and alert counts
-GET {{host}}/devices
-
-### 5. Search devices by name
-GET {{host}}/devices?q=pump
-
-### 6. Only devices with alerts
-GET {{host}}/devices?hasAlerts=true
-
-### 7. Filter by category (Climate / Electrical / Control)
-GET {{host}}/devices?category=Control
-
-### 8. Queue status
-GET {{host}}/ingestion/status
-
-### 9. Pause processing (queues will fill up)
-POST {{host}}/ingestion/pause
-
-### 10. Resume processing
-POST {{host}}/ingestion/resume
-
-### 11. Normal electrical reading (goes to the Queue)
-POST {{host}}/telemetry/electrical
+### M3. Greenhouse - Cold Room (cost 1)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{
-  "sensorId": "{{sensorId}}",
-  "value": { "watts": 300 }
-}
+{ "from": "AA:BB:CC:00:00:01", "to": "AA:BB:CC:00:00:02", "cost": 1 }
 
-### 12. Critical electrical reading (goes to the PriorityQueue)
-POST {{host}}/telemetry/electrical
+### M4. Cold Room - Mains Meter (cost 5)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{
-  "sensorId": "{{sensorId}}",
-  "value": { "watts": 6000 }
-}
+{ "from": "AA:BB:CC:00:00:02", "to": "AA:BB:CC:00:00:03", "cost": 5 }
 
-### 13. Active alerts
-GET {{host}}/alerts
-
-### 14. Raise a disconnect alert (send twice: second time is a duplicate)
-POST {{host}}/alerts/disconnect
+### M5. Mains Meter - Pump A (cost 2)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{
-  "sensorId": "{{sensorId}}"
-}
+{ "from": "AA:BB:CC:00:00:03", "to": "AA:BB:CC:00:00:04", "cost": 2 }
 
-### 15. Clear an alert (kinds: Disconnected, PowerSpike, ClimateExtreme)
-DELETE {{host}}/alerts/{{sensorId}}/Disconnected
-
-### 16. Sensor history, sorted by time (SortedDictionary)
-GET {{host}}/history/{{sensorId}}
-
-### 17. History with a time range and limit (use Z for UTC)
-GET {{host}}/history/{{sensorId}}?since=2026-10-19T00:00:00Z&until=2026-10-20T00:00:00Z&limit=10
-
-### 18. Turn a device ON
-POST {{host}}/commands
+### M6. Pump A - Valve B (cost 3)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{
-  "on": true,
-  "sensorIds": ["{{pumpId}}"]
-}
+{ "from": "AA:BB:CC:00:00:04", "to": "AA:BB:CC:00:00:05", "cost": 3 }
 
-### 19. Turn a device OFF
-POST {{host}}/commands
+### M7. Greenhouse - Valve B (cost 6)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{
-  "on": false,
-  "sensorIds": ["{{pumpId}}"]
-}
+{ "from": "AA:BB:CC:00:00:01", "to": "AA:BB:CC:00:00:05", "cost": 6 }
 
-### 20. Turn ALL control devices OFF (empty list = all)
-POST {{host}}/commands
+### M8. Cold Room - Pump A (cost 4)
+POST {{host}}/mesh/links
 Content-Type: application/json
 
-{
-  "on": false
-}
+{ "from": "AA:BB:CC:00:00:02", "to": "AA:BB:CC:00:00:04", "cost": 4 }
 
-### 21. Undo the last command (Stack)
-POST {{host}}/commands/undo
+### M9. View the whole mesh
+GET {{host}}/mesh
 
-### 22. Command history
-GET {{host}}/commands/history
+### M10. Duplicate link (reversed order) - expect 400 "already linked"
+POST {{host}}/mesh/links
+Content-Type: application/json
 
-### 23. Current on/off state of control devices
-GET {{host}}/commands/state
+{ "from": "AA:BB:CC:00:00:03", "to": "gateway", "cost": 9 }
 
-### 24. Record a search (feeds the suggestion engine)
+### M11. Link to itself - expect 400
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:01", "to": "AA:BB:CC:00:00:01", "cost": 1 }
+
+### M12. Unknown MAC - expect 400
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:01", "to": "FF:FF:FF:FF:FF:FF", "cost": 1 }
+
+### M13. Bad cost - expect 400
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:02", "to": "gateway", "cost": 0 }
+
+### M14. Remove a link (Greenhouse - Valve B)
+DELETE {{host}}/mesh/links?from=AA:BB:CC:00:00:01&to=AA:BB:CC:00:00:05
+
+### M15. Remove it again - expect 404
+DELETE {{host}}/mesh/links?from=AA:BB:CC:00:00:01&to=AA:BB:CC:00:00:05
+
+
+### M16. Put the Greenhouse - Valve B link back (cost 6)
+POST {{host}}/mesh/links
+Content-Type: application/json
+
+{ "from": "AA:BB:CC:00:00:01", "to": "AA:BB:CC:00:00:05", "cost": 6 }
+
+### B1. Everything reachable from the gateway
+GET {{host}}/mesh/reachable
+
+### B2. Route for Cold Room
+GET {{host}}/mesh/route/AA:BB:CC:00:00:02
+
+### B3. Mark Mains Meter DOWN
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/down
+
+### B4. Reachable again (Mains is down)
+GET {{host}}/mesh/reachable
+
+### B5. Route for Pump A (must go around)
+GET {{host}}/mesh/route/AA:BB:CC:00:00:04
+
+### B6. Route for the down node itself
+GET {{host}}/mesh/route/AA:BB:CC:00:00:03
+
+### B7. Network status
+GET {{host}}/mesh/status
+
+### B8. Also mark Greenhouse DOWN (the gateway loses both of its links)
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:01/down
+
+### B9. Reachable now
+GET {{host}}/mesh/reachable
+
+### B10. Status (cut-off nodes)
+GET {{host}}/mesh/status
+
+### B11. Bring both back up
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/up
+
+###
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:01/up
+
+### B12. Reachable after recovery
+GET {{host}}/mesh/reachable
+
+### B13. Gateway cannot go down - expect 400
+POST {{host}}/mesh/nodes/gateway/down
+
+### B14. Unknown node - expect 400
+GET {{host}}/mesh/route/FF:FF:FF:FF:FF:FF
+
+### B15. Reachable from a different start node (Valve B)
+GET {{host}}/mesh/reachable?from=AA:BB:CC:00:00:05
+
+### P1. The minimum spanning tree
+GET {{host}}/mesh/mst
+
+### P2. Valve B: cheapest route vs fewest hops
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:05
+
+### P3. Cold Room: cheapest route vs fewest hops
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:02
+
+### P4. Pump A
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:04
+
+### P5. Mark Mains Meter DOWN, then rebuild the tree
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/down
+
+### P6. Tree without Mains Meter
+GET {{host}}/mesh/mst
+
+### P7. Valve B route with Mains down
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:05
+
+### P8. Route for the down node
+GET {{host}}/mesh/mst/route/AA:BB:CC:00:00:03
+
+### P9. Bring Mains Meter back up
+POST {{host}}/mesh/nodes/AA:BB:CC:00:00:03/up
+
+### P10. Unknown node - expect 400
+GET {{host}}/mesh/mst/route/FF:FF:FF:FF:FF:FF
+
+
+### Q1 - search a few terms
 POST {{host}}/insights/search
 Content-Type: application/json
 
-{
-  "term": "pump"
-}
+{ "term": "new11" }
 
-### 25. Suggested actions
+### Q2 - another term
+POST {{host}}/insights/search
+Content-Type: application/json
+
+{ "term": "valve" }
+
+### Q3 - see the queue (newest first)
+GET {{host}}/insights/search-history
+
+
+### H1 - search "pump" (send, then H2, then pump, valve, pump again)
+POST {{host}}/insights/search
+Content-Type: application/json
+
+{ "term": "pump" }
+
+### H2 - search "valve"
+POST {{host}}/insights/search
+Content-Type: application/json
+
+{ "term": "valve" }
+
+### H3 - everything currently suggested
 GET {{host}}/insights/suggestions
 
-### 26. Automated insights (silent, near limit, unusual reading)
-GET {{host}}/insights/devices

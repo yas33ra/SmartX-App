@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json.Nodes;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace SmartX.Client.Services
 {
@@ -117,6 +120,138 @@ namespace SmartX.Client.Services
         {
             var response = await _http.PostAsJsonAsync("/insights/search", new SearchEventRequest(term));
             response.EnsureSuccessStatusCode();
+        }
+
+        // ---------- Network Topology (Part 3) ----------
+
+        // Reads the { "errors": [...] } message the API sends with a 400
+        private static async Task<string> ReadApiErrorAsync(HttpResponseMessage response)
+        {
+            var text = await response.Content.ReadAsStringAsync();
+
+            try
+            {
+                if (JsonNode.Parse(text)?["errors"] is JsonArray errors && errors.Count > 0)
+                {
+                    return string.Join(" ", errors.Select(e => (string?)e));
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // not JSON: fall through to the generic message
+            }
+
+            return $"The API returned {(int)response.StatusCode}.";
+        }
+
+        public async Task<MeshInfo> GetMeshAsync() =>
+            await _http.GetFromJsonAsync<MeshInfo>("/mesh") ?? new MeshInfo();
+
+        public async Task<MeshStatusInfo> GetMeshStatusAsync() =>
+            await _http.GetFromJsonAsync<MeshStatusInfo>("/mesh/status") ?? new MeshStatusInfo();
+
+        public async Task<MstInfo> GetMstAsync() =>
+            await _http.GetFromJsonAsync<MstInfo>("/mesh/mst") ?? new MstInfo();
+
+        // node = a MAC address or a sensor id
+        public async Task<RouteComparison> GetRouteComparisonAsync(string node)
+        {
+            var response = await _http.GetAsync($"/mesh/mst/route/{Uri.EscapeDataString(node)}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+
+            return await response.Content.ReadFromJsonAsync<RouteComparison>() ?? new RouteComparison();
+        }
+
+        public async Task SetNodeDownAsync(string node, bool down)
+        {
+            var action = down ? "down" : "up";
+            var response = await _http.PostAsync($"/mesh/nodes/{Uri.EscapeDataString(node)}/{action}", null);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+        }
+
+        // Readings for one sensor in time order, optionally limited to a time window (UTC)
+        public async Task<List<HistoryPointInfo>> GetHistoryAsync(
+            Guid sensorId, DateTime? sinceUtc = null, DateTime? untilUtc = null, int? limit = null)
+        {
+            var query = new List<string>();
+
+            if (sinceUtc is not null)
+                query.Add("since=" + Uri.EscapeDataString(sinceUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
+            if (untilUtc is not null)
+                query.Add("until=" + Uri.EscapeDataString(untilUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
+            if (limit is > 0)
+                query.Add("limit=" + limit.Value);
+
+            var url = $"/history/{sensorId}" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+
+            return await _http.GetFromJsonAsync<List<HistoryPointInfo>>(url) ?? new List<HistoryPointInfo>();
+        }
+
+        public async Task<HistoryStatsInfo> GetHistoryStatsAsync(Guid sensorId) =>
+            await _http.GetFromJsonAsync<HistoryStatsInfo>($"/history/{sensorId}/stats") ?? new HistoryStatsInfo();
+
+        // fromNode / toNode can be a sensor id, a MAC address or "gateway"
+        public async Task AddLinkAsync(string fromNode, string toNode, double cost)
+        {
+            var response = await _http.PostAsJsonAsync("/mesh/links",
+                new { From = fromNode, To = toNode, Cost = cost });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+        }
+
+        public async Task RemoveLinkAsync(string fromNode, string toNode)
+        {
+            var response = await _http.DeleteAsync(
+                $"/mesh/links?from={Uri.EscapeDataString(fromNode)}&to={Uri.EscapeDataString(toNode)}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+        }
+
+        // Opens the server's event stream and hands back a new suggestion list every time one is pushed
+        public async IAsyncEnumerable<List<SuggestionInfo>> StreamSuggestionsAsync(
+            [EnumeratorCancellation] CancellationToken ct)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "insights/suggestions/stream");
+
+            // ResponseHeadersRead = give me the response as soon as it starts, do not wait for it to end
+            using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            response.EnsureSuccessStatusCode();
+
+            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            using var reader = new StreamReader(stream);
+
+            while (!ct.IsCancellationRequested)
+            {
+                var line = await reader.ReadLineAsync(ct);
+                if (line is null) yield break;                 // the server closed the connection
+
+                if (line.StartsWith("data: "))                 // the "event:" and blank lines are skipped
+                {
+                    var list = JsonSerializer.Deserialize<List<SuggestionInfo>>(
+                        line["data: ".Length..], JsonSerializerOptions.Web);
+
+                    if (list is not null) yield return list;
+                }
+            }
+        }
+
+        public async Task<List<string>> GetSearchHistoryAsync()
+        {
+            return await _http.GetFromJsonAsync<List<string>>("insights/search-history") ?? new List<string>();
         }
     }
 
