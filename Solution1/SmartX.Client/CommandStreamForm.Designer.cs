@@ -55,6 +55,8 @@
             lstSuggestions = new ListBox();
             gbInsights = new GroupBox();
             lstInsights = new ListBox();
+            lstRecentSearches = new ListBox();
+            label1 = new Label();
             gbSuggestions.SuspendLayout();
             gbInsights.SuspendLayout();
             SuspendLayout();
@@ -207,10 +209,10 @@
             // 
             // lblAlerts
             // 
-            lblAlerts.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            lblAlerts.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblAlerts.AutoSize = true;
             lblAlerts.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblAlerts.Location = new Point(703, 114);
+            lblAlerts.Location = new Point(692, 91);
             lblAlerts.Name = "lblAlerts";
             lblAlerts.Size = new Size(79, 15);
             lblAlerts.TabIndex = 12;
@@ -220,17 +222,17 @@
             // 
             lstAlerts.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lstAlerts.FormattingEnabled = true;
-            lstAlerts.Location = new Point(692, 129);
+            lstAlerts.Location = new Point(692, 109);
             lstAlerts.Name = "lstAlerts";
             lstAlerts.Size = new Size(280, 154);
             lstAlerts.TabIndex = 13;
             // 
             // lblHistory
             // 
-            lblHistory.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            lblHistory.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             lblHistory.AutoSize = true;
             lblHistory.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblHistory.Location = new Point(703, 310);
+            lblHistory.Location = new Point(692, 422);
             lblHistory.Name = "lblHistory";
             lblHistory.Size = new Size(184, 15);
             lblHistory.TabIndex = 14;
@@ -240,7 +242,7 @@
             // 
             lstHistory.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
             lstHistory.FormattingEnabled = true;
-            lstHistory.Location = new Point(692, 328);
+            lstHistory.Location = new Point(692, 440);
             lstHistory.Name = "lstHistory";
             lstHistory.Size = new Size(280, 154);
             lstHistory.TabIndex = 15;
@@ -286,9 +288,9 @@
             // 
             gbInsights.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             gbInsights.Controls.Add(lstInsights);
-            gbInsights.Location = new Point(620, 513);
+            gbInsights.Location = new Point(588, 600);
             gbInsights.Name = "gbInsights";
-            gbInsights.Size = new Size(352, 222);
+            gbInsights.Size = new Size(384, 145);
             gbInsights.TabIndex = 17;
             gbInsights.TabStop = false;
             gbInsights.Text = "Automated Insights";
@@ -302,12 +304,34 @@
             lstInsights.Size = new Size(323, 184);
             lstInsights.TabIndex = 0;
             // 
+            // lstRecentSearches
+            // 
+            lstRecentSearches.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lstRecentSearches.FormattingEnabled = true;
+            lstRecentSearches.Location = new Point(692, 299);
+            lstRecentSearches.Name = "lstRecentSearches";
+            lstRecentSearches.Size = new Size(280, 94);
+            lstRecentSearches.TabIndex = 18;
+            // 
+            // label1
+            // 
+            label1.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            label1.AutoSize = true;
+            label1.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label1.Location = new Point(692, 281);
+            label1.Name = "label1";
+            label1.Size = new Size(100, 15);
+            label1.TabIndex = 19;
+            label1.Text = "Recent Searches";
+            // 
             // CommandStreamForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackgroundImage = Properties.Resources.commandbackground;
             ClientSize = new Size(984, 761);
+            Controls.Add(label1);
+            Controls.Add(lstRecentSearches);
             Controls.Add(gbInsights);
             Controls.Add(gbSuggestions);
             Controls.Add(lstHistory);
@@ -364,5 +388,7 @@
         private ListBox lstSuggestions;
         private GroupBox gbInsights;
         private ListBox lstInsights;
+        private ListBox lstRecentSearches;
+        private Label label1;
     }
 }

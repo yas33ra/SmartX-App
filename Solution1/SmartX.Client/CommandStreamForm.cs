@@ -15,6 +15,7 @@ namespace SmartX.Client
         private readonly ApiClient _apiClient = new();
 
         // Polls the API every 3 seconds while this page is visible
+        // (devices, alerts, command history and insights; suggestions are pushed instead)
         private readonly System.Windows.Forms.Timer _refreshTimer = new() { Interval = 3000 };
 
         // Waits 300 ms after the last keystroke before searching, so we don't call the API per letter
@@ -32,7 +33,8 @@ namespace SmartX.Client
             cmbCategory.Items.AddRange(new object[] { "All", "Climate", "Electrical", "Control" });
             cmbCategory.SelectedIndex = 0;
 
-            // Page visible = start polling; hidden = stop (the Navigator hides forms instead of closing them)
+            // Page visible = start polling and listening; hidden = stop
+            // (the Navigator hides forms instead of closing them)
             VisibleChanged += CommandStreamForm_VisibleChanged;
             _refreshTimer.Tick += async (s, e) => await RefreshAllSafeAsync();
 
@@ -42,11 +44,18 @@ namespace SmartX.Client
             {
                 _searchTimer.Stop();
                 await RecordSearchSafeAsync(txtSearch.Text);   // tell the engine the USER searched
+                await LoadRecentSearchesAsync();               // show the updated queue of recent searches
                 await RefreshAllSafeAsync();
             };
             cmbCategory.SelectedIndexChanged += async (s, e) => await RefreshAllSafeAsync();
             chkAlertsOnly.CheckedChanged += async (s, e) => await RefreshAllSafeAsync();
             btnRefresh.Click += async (s, e) => await RefreshAllSafeAsync();
+
+            // Double-click a recent search to run it again
+            lstRecentSearches.DoubleClick += (s, e) =>
+            {
+                if (lstRecentSearches.SelectedItem is string term) txtSearch.Text = term;
+            };
 
             // Commands
             btnTurnOn.Click += async (s, e) => await SendToSelectedAsync(on: true);
@@ -59,7 +68,12 @@ namespace SmartX.Client
                 lblSuggestionWhy.Text = (lstSuggestions.SelectedItem as SuggestionInfo)?.Evidence ?? "";
             btnApplySuggestion.Click += async (s, e) => await ApplySuggestionAsync();
 
-            FormClosed += (s, e) => { StopSuggestionStream(); _refreshTimer.Dispose(); _searchTimer.Dispose(); };
+            FormClosed += (s, e) =>
+            {
+                StopSuggestionStream();
+                _refreshTimer.Dispose();
+                _searchTimer.Dispose();
+            };
         }
 
         //-----------------------------------------------------------------
@@ -70,6 +84,7 @@ namespace SmartX.Client
             {
                 _refreshTimer.Start();
                 StartSuggestionStream();
+                await LoadRecentSearchesAsync();
                 await RefreshAllSafeAsync();
             }
             else
@@ -80,7 +95,8 @@ namespace SmartX.Client
         }
 
         //-----------------------------------------------------------------
-        // Loading data
+        // Pushed suggestions (Server-Sent Events)
+
         private void StartSuggestionStream()
         {
             if (_streamCts is not null) return;      // already listening
@@ -121,6 +137,10 @@ namespace SmartX.Client
                 catch (OperationCanceledException) { return; }
             }
         }
+
+        //-----------------------------------------------------------------
+        // Loading data
+
         // Never throws: a down API shows a status message instead of crashing the page
         private async Task RefreshAllSafeAsync()
         {
@@ -155,6 +175,24 @@ namespace SmartX.Client
             finally
             {
                 _isRefreshing = false;
+            }
+        }
+
+        // Shows the server's queue of recent searches, newest first
+        private async Task LoadRecentSearchesAsync()
+        {
+            try
+            {
+                var recent = await _apiClient.GetSearchHistoryAsync();
+
+                lstRecentSearches.BeginUpdate();
+                lstRecentSearches.Items.Clear();
+                lstRecentSearches.Items.AddRange(recent.Cast<object>().ToArray());
+                lstRecentSearches.EndUpdate();
+            }
+            catch
+            {
+                // best effort: the list is a convenience
             }
         }
 
@@ -215,7 +253,7 @@ namespace SmartX.Client
 
         private void ShowSuggestions(List<SuggestionInfo> suggestions)
         {
-            // Remember the selection so the 3-second refresh doesn't deselect while the user reads
+            // Remember the selection so a new push doesn't deselect while the user reads
             var selectedText = (lstSuggestions.SelectedItem as SuggestionInfo)?.Text;
 
             lstSuggestions.BeginUpdate();

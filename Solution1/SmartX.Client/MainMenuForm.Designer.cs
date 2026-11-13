@@ -36,7 +36,7 @@
             // 
             // btnCommandStream
             // 
-            btnCommandStream.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            btnCommandStream.Anchor = AnchorStyles.Top | AnchorStyles.Bottom;
             btnCommandStream.BackColor = Color.Transparent;
             btnCommandStream.FlatStyle = FlatStyle.Flat;
             btnCommandStream.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
@@ -51,7 +51,7 @@
             // 
             // btnTopology
             // 
-            btnTopology.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            btnTopology.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             btnTopology.BackColor = Color.Transparent;
             btnTopology.FlatStyle = FlatStyle.Flat;
             btnTopology.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
@@ -66,7 +66,7 @@
             // 
             // btnIngestion
             // 
-            btnIngestion.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            btnIngestion.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             btnIngestion.BackColor = Color.Transparent;
             btnIngestion.FlatStyle = FlatStyle.Flat;
             btnIngestion.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold, GraphicsUnit.Point, 0);

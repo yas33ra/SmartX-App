@@ -248,6 +248,11 @@ namespace SmartX.Client.Services
                 }
             }
         }
+
+        public async Task<List<string>> GetSearchHistoryAsync()
+        {
+            return await _http.GetFromJsonAsync<List<string>>("insights/search-history") ?? new List<string>();
+        }
     }
 
 
