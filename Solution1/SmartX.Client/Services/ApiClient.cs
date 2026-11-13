@@ -178,22 +178,51 @@ namespace SmartX.Client.Services
         }
 
         // Readings for one sensor in time order, optionally limited to a time window (UTC)
-        public async Task<List<HistoryPointInfo>> GetHistoryAsync(
-            Guid sensorId, DateTime? sinceUtc = null, DateTime? untilUtc = null, int? limit = null)
+       // Readings for one sensor in time order, optionally limited to a time window (UTC)
+public async Task<List<HistoryPointInfo>> GetHistoryAsync(
+    Guid sensorId, DateTime? sinceUtc = null, DateTime? untilUtc = null, int? limit = null)
+{
+    var query = new List<string>();
+
+    if (sinceUtc is not null)
+        query.Add("since=" + Uri.EscapeDataString(sinceUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
+    if (untilUtc is not null)
+        query.Add("until=" + Uri.EscapeDataString(untilUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
+    if (limit is > 0)
+        query.Add("limit=" + limit.Value);
+
+    var url = $"/history/{sensorId}" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+
+    var response = await _http.GetAsync(url);
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new InvalidOperationException(await ReadApiErrorAsync(response));
+    }
+
+    var json = await response.Content.ReadAsStringAsync();
+    using var doc = JsonDocument.Parse(json);
+
+    // The reply is either a plain list, or an object that holds the list
+    JsonElement list = doc.RootElement;
+
+    if (list.ValueKind == JsonValueKind.Object)
+    {
+        list = default;
+        foreach (var property in doc.RootElement.EnumerateObject())
         {
-            var query = new List<string>();
-
-            if (sinceUtc is not null)
-                query.Add("since=" + Uri.EscapeDataString(sinceUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
-            if (untilUtc is not null)
-                query.Add("until=" + Uri.EscapeDataString(untilUtc.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")));
-            if (limit is > 0)
-                query.Add("limit=" + limit.Value);
-
-            var url = $"/history/{sensorId}" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
-
-            return await _http.GetFromJsonAsync<List<HistoryPointInfo>>(url) ?? new List<HistoryPointInfo>();
+            if (property.Value.ValueKind == JsonValueKind.Array)
+            {
+                list = property.Value;     // the first list inside the object
+                break;
+            }
         }
+    }
+
+    if (list.ValueKind != JsonValueKind.Array) return new List<HistoryPointInfo>();
+
+    return list.Deserialize<List<HistoryPointInfo>>(JsonSerializerOptions.Web) ?? new List<HistoryPointInfo>();
+}
 
         public async Task<HistoryStatsInfo> GetHistoryStatsAsync(Guid sensorId) =>
             await _http.GetFromJsonAsync<HistoryStatsInfo>($"/history/{sensorId}/stats") ?? new HistoryStatsInfo();
