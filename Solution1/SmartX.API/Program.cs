@@ -40,6 +40,10 @@ namespace SmartX.API
 
             builder.Services.AddSingleton<SearchHistory>();
 
+            builder.Services.AddSingleton<SuggestionBroadcaster>();
+
+            builder.Services.AddHostedService<SuggestionWatcher>();
+
             var app = builder.Build();
 
             app.MapSensorEndpoints ();

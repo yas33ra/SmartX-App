@@ -201,5 +201,3 @@ Content-Type: application/json
 ### H3 - everything currently suggested
 GET {{host}}/insights/suggestions
 
-### H4 - only suggestions that are NEW since the last call
-GET {{host}}/insights/suggestions/new

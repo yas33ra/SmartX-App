@@ -111,23 +111,27 @@
 
         // Like Suggest, but returns only suggestions that were NOT already on offer.
         // "exclude" lets the caller skip ones that make no sense (e.g. pump is already off).
-        public List<PatternSuggestion> TakeNewSuggestions(
+        // Returns true when the suggestions on offer are different from last time.
+        // "current" is always filled with the full, up-to-date list.
+        public bool TryGetChangedSuggestions(
             IEnumerable<string> activeTriggerKeys,
-            Func<ActionEvent, bool>? exclude = null,
+            Func<ActionEvent, bool>? exclude,
+            out List<PatternSuggestion> current,
             int max = 3)
         {
             lock (_lock)
             {
-                var current = Suggest(activeTriggerKeys, max)
+                current = Suggest(activeTriggerKeys, max)
                     .Where(s => exclude is null || !exclude(s.Action))
                     .ToList();
 
-                // Forget suggestions that are no longer relevant,
-                // so they count as new again if they come back later
-                _activeSuggestionKeys.IntersectWith(current.Select(s => s.Action.Key));
+                var currentKeys = current.Select(s => s.Action.Key).ToHashSet();
 
-                // Add returns false when the key is already in the set, so only new ones pass
-                return current.Where(s => _activeSuggestionKeys.Add(s.Action.Key)).ToList();
+                if (_activeSuggestionKeys.SetEquals(currentKeys)) return false;   // nothing changed
+
+                _activeSuggestionKeys.Clear();
+                _activeSuggestionKeys.UnionWith(currentKeys);
+                return true;
             }
         }
 

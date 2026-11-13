@@ -1,4 +1,5 @@
 ﻿using SmartX.API.Storage;
+using System.Text.Json;
 
 namespace SmartX.API.Endpoints
 {
@@ -38,38 +39,12 @@ namespace SmartX.API.Endpoints
 
                 var suggestions = patterns.Suggest(activeAlertKeys)
                     .Where(s => !AlreadyDone(s.Action, states))
-                    .Select(s => new
-                    {
-                        kind = s.Action.Type.ToString(),
-                        text = s.Action.Label,
-                        searchTerm = s.Action.SearchTerm,
-                        on = s.Action.On,
-                        sensorIds = s.Action.SensorIds,
-                        confidence = Math.Round(s.Confidence * 100),
-                        evidence = $"After {Describe(s.ContextKey, registry, patterns)}, " +
-                                   $"you did this {s.Count} of {s.Total} times."
-                    });
+                    .Select(s => ToDto(s, registry, patterns));
 
                 return Results.Ok(suggestions);
             });
 
-            // Only suggestions that were not on offer last time (this is what a push will use)
-            group.MapGet("/suggestions/new", (PatternEngine patterns, AlertTracker alerts, CommandService commands) =>
-            {
-                var activeAlertKeys = alerts.GetAll().Select(a => $"alert:{a.SensorId}:{a.Kind}");
-                var states = commands.GetState().ToDictionary(kv => kv.Key, kv => kv.Value);
-
-                var fresh = patterns.TakeNewSuggestions(activeAlertKeys, action => AlreadyDone(action, states))
-                    .Select(s => new
-                    {
-                        kind = s.Action.Type.ToString(),
-                        text = s.Action.Label,
-                        confidence = Math.Round(s.Confidence * 100)
-                    });
-
-                return Results.Ok(fresh);
-            });
-
+           
 
             // Devices that look problematic right now
             group.MapGet("/devices", (InsightEngine engine) =>
@@ -81,10 +56,42 @@ namespace SmartX.API.Endpoints
                     severity = i.Severity.ToString(),
                     message = i.Message
                 })));
+
+            // Server-Sent Events: the connection stays open and the server writes to it when suggestions change
+            group.MapGet("/suggestions/stream", async (HttpContext http, SuggestionBroadcaster broadcaster,
+                                                       PatternEngine patterns, SensorRegistry registry,
+                                                       CancellationToken ct) =>
+            {
+                http.Response.Headers.ContentType = "text/event-stream";
+                http.Response.Headers.CacheControl = "no-cache";
+
+                var (id, reader) = broadcaster.Subscribe();
+
+                try
+                {
+                    // Waits (without blocking a thread) until the next list arrives
+                    await foreach (var list in reader.ReadAllAsync(ct))
+                    {
+                        var json = JsonSerializer.Serialize(
+                            list.Select(s => ToDto(s, registry, patterns)), JsonSerializerOptions.Web);
+
+                        await http.Response.WriteAsync($"event: suggestions\ndata: {json}\n\n", ct);
+                        await http.Response.Body.FlushAsync(ct);
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    // the client closed the page: normal
+                }
+                finally
+                {
+                    broadcaster.Unsubscribe(id);
+                }
+            });
         }
 
         // Don't suggest "turn Pump A OFF" if Pump A is already off
-        private static bool AlreadyDone(ActionEvent action, Dictionary<Guid, bool> states) =>
+        public static bool AlreadyDone(ActionEvent action, Dictionary<Guid, bool> states) =>
             action.On is not null
             && action.SensorIds is not null
             && action.SensorIds.All(id => states.GetValueOrDefault(id, false) == action.On.Value);
@@ -104,5 +111,20 @@ namespace SmartX.API.Endpoints
             }
             return $"\"{patterns.GetLabel(key) ?? key}\"";
         }
+
+        private static object ToDto(PatternSuggestion s, SensorRegistry registry, PatternEngine patterns) => new
+        {
+            kind = s.Action.Type.ToString(),
+            text = s.Action.Label,
+            searchTerm = s.Action.SearchTerm,
+            on = s.Action.On,
+            sensorIds = s.Action.SensorIds,
+            confidence = Math.Round(s.Confidence * 100),
+            evidence = $"After {Describe(s.ContextKey, registry, patterns)}, " +
+               $"you did this {s.Count} of {s.Total} times."
+        };
+
+
+
     }
 }
