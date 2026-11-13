@@ -22,6 +22,9 @@ namespace SmartX.Client
 
         private bool _isRefreshing;
 
+        // Controls the open connection that the server pushes suggestions through
+        private CancellationTokenSource? _streamCts;
+
         public CommandStreamForm()
         {
             InitializeComponent();
@@ -56,7 +59,7 @@ namespace SmartX.Client
                 lblSuggestionWhy.Text = (lstSuggestions.SelectedItem as SuggestionInfo)?.Evidence ?? "";
             btnApplySuggestion.Click += async (s, e) => await ApplySuggestionAsync();
 
-            FormClosed += (s, e) => { _refreshTimer.Dispose(); _searchTimer.Dispose(); };
+            FormClosed += (s, e) => { StopSuggestionStream(); _refreshTimer.Dispose(); _searchTimer.Dispose(); };
         }
 
         //-----------------------------------------------------------------
@@ -66,17 +69,58 @@ namespace SmartX.Client
             if (Visible)
             {
                 _refreshTimer.Start();
+                StartSuggestionStream();
                 await RefreshAllSafeAsync();
             }
             else
             {
                 _refreshTimer.Stop();
+                StopSuggestionStream();
             }
         }
 
         //-----------------------------------------------------------------
         // Loading data
+        private void StartSuggestionStream()
+        {
+            if (_streamCts is not null) return;      // already listening
 
+            _streamCts = new CancellationTokenSource();
+            _ = ListenForSuggestionsAsync(_streamCts.Token);
+        }
+
+        private void StopSuggestionStream()
+        {
+            _streamCts?.Cancel();
+            _streamCts?.Dispose();
+            _streamCts = null;
+        }
+
+        // Waits for the server to push a new list. If the API goes away, tries again every 3 seconds.
+        private async Task ListenForSuggestionsAsync(CancellationToken ct)
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                try
+                {
+                    await foreach (var list in _apiClient.StreamSuggestionsAsync(ct))
+                    {
+                        ShowSuggestions(list);       // we are back on the UI thread after each await
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    return;                          // page hidden or closed
+                }
+                catch (Exception)
+                {
+                    // API stopped or restarted: fall through, wait, reconnect
+                }
+
+                try { await Task.Delay(3000, ct); }
+                catch (OperationCanceledException) { return; }
+            }
+        }
         // Never throws: a down API shows a status message instead of crashing the page
         private async Task RefreshAllSafeAsync()
         {
@@ -92,14 +136,12 @@ namespace SmartX.Client
                 var devicesTask = _apiClient.GetDevicesAsync(txtSearch.Text, category, hasAlerts);
                 var alertsTask = _apiClient.GetAlertsAsync();
                 var historyTask = _apiClient.GetCommandHistoryAsync();
-                var suggestionsTask = _apiClient.GetSuggestionsAsync();
                 var insightsTask = _apiClient.GetDeviceInsightsAsync();
-                await Task.WhenAll(devicesTask, alertsTask, historyTask, suggestionsTask, insightsTask);
+                await Task.WhenAll(devicesTask, alertsTask, historyTask, insightsTask);
 
                 ShowDevices(devicesTask.Result);
                 ShowAlerts(alertsTask.Result);
                 ShowHistory(historyTask.Result);
-                ShowSuggestions(suggestionsTask.Result);
                 ShowInsights(insightsTask.Result);
             }
             catch (HttpRequestException)

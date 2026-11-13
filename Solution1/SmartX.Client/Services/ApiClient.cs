@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace SmartX.Client.Services
 {
@@ -216,6 +218,34 @@ namespace SmartX.Client.Services
             if (!response.IsSuccessStatusCode)
             {
                 throw new InvalidOperationException(await ReadApiErrorAsync(response));
+            }
+        }
+
+        // Opens the server's event stream and hands back a new suggestion list every time one is pushed
+        public async IAsyncEnumerable<List<SuggestionInfo>> StreamSuggestionsAsync(
+            [EnumeratorCancellation] CancellationToken ct)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "insights/suggestions/stream");
+
+            // ResponseHeadersRead = give me the response as soon as it starts, do not wait for it to end
+            using var response = await _http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+            response.EnsureSuccessStatusCode();
+
+            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            using var reader = new StreamReader(stream);
+
+            while (!ct.IsCancellationRequested)
+            {
+                var line = await reader.ReadLineAsync(ct);
+                if (line is null) yield break;                 // the server closed the connection
+
+                if (line.StartsWith("data: "))                 // the "event:" and blank lines are skipped
+                {
+                    var list = JsonSerializer.Deserialize<List<SuggestionInfo>>(
+                        line["data: ".Length..], JsonSerializerOptions.Web);
+
+                    if (list is not null) yield return list;
+                }
             }
         }
     }
