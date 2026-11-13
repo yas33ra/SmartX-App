@@ -1,8 +1,8 @@
 # Smart-X IoT System
 
 **Name:** Yaseera  **Student number:** st10456786
-**Module:** PROG7312 – Part 2
-**Demo video:** 
+**Module:** PROG7312 – Part 3
+**Demo video:** https://youtu.be/EXsmCIZIFRk?si=2GWu5zAXah4NlxRX 
 
 Smart-X is a simulated IoT system for monitoring distributed environments such as hydroponic farms or smart grid installations. Sensors send readings to an API, and a Windows Forms app lets an operator watch the devices, send commands and look at how the devices are connected to each other.
 
